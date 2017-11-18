@@ -1,8 +1,9 @@
+# -*- coding: UTF-8 -*-
 import os
 import cv2
 import progressbar
 import copy
-import utils_image
+import Utils_Image
 import Utils_Imagenet
 import Utils_Tensorbox
 import frame
@@ -77,13 +78,14 @@ def make_video_from_list(out_vid_path, frames_list):
         img = cv2.imread(frames_list[0], True)
         print frames_list[0]
         h, w = img.shape[:2]
-        fourcc = cv2.cv.CV_FOURCC('m', 'p', '4', 'v')
+        #fourcc = cv2.cv.CV_FOURCC('m', 'p', '4', 'v')
+        fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
         out = cv2.VideoWriter(out_vid_path,fourcc, 20.0, (w, h), True)
         print("Start Making File Video:%s " % out_vid_path)
         print("%d Frames to Compress"%len(frames_list))
         progress = progressbar.ProgressBar(widgets=[progressbar.Bar('=', '[', ']'), ' ',progressbar.Percentage(), ' ',progressbar.ETA()])
         for i in progress(range(0,len(frames_list))):
-            if utils_image.check_image_with_pil(frames_list[i]):
+            if Utils_Image.check_image_with_pil(frames_list[i]):
                 out.write(img)
                 img = cv2.imread(frames_list[i], True)
         out.release()
@@ -174,7 +176,9 @@ def extract_frames_incten(vid_path, video_perc, path_video_folder, idl_filename)
     print("Opened File Video:%s " % vid_path)
     print("Start Reading File Video:%s " % vid_path)
     
-    total = int((vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)/100)*video_perc)
+    # total = int((vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)/100)*video_perc)
+    # Fixed
+    total = int((vidcap.get(7)/100)*video_perc)
     
     print("%d Frames to Read"%total)
     progress = progressbar.ProgressBar(widgets=[progressbar.Bar('=', '[', ']'), ' ',progressbar.Percentage(), ' ',progressbar.ETA()])
@@ -459,14 +463,15 @@ def extract_frames(vid_path, video_perc):
     frames=[]
     # Opening & Reading the Video
     print("Opening File Video:%s " % vid_path)
-    vidcap = cv2.VideoCapture(vid_path)
+    vidcap = cv2.VideoCapture(vid_path) # 動画を扱うためのインスタンス生成
     if not vidcap.isOpened():
         print "could Not Open :",vid_path
         return
     print("Opened File Video:%s " % vid_path)
     print("Start Reading File Video:%s " % vid_path)
-    image = vidcap.read()
-    total = int((vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)/100)*video_perc)
+    image = vidcap.read() # Convert Image (tuple)
+    #total = int((vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)/100)*video_perc)
+    total = int((vidcap.get(7)/100)*video_perc) # default 30
     print("%d Frames to Read"%total)
     progress = progressbar.ProgressBar(widgets=[progressbar.Bar('=', '[', ']'), ' ',progressbar.Percentage(), ' ',progressbar.ETA()])
     for i in progress(range(0,total)):
@@ -474,4 +479,4 @@ def extract_frames(vid_path, video_perc):
         frames.append(image)
         image = vidcap.read()
     print("Finish Reading File Video:%s " % vid_path)
-    return frames, list
+    return frames, list # percのFrame imageとList(frame1,2....jpg) どちらもList

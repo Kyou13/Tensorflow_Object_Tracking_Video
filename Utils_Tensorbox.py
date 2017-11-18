@@ -23,8 +23,8 @@ from utils.rect import Rect
 import vid_classes
 import frame
 import multiclass_rectangle
-import utils_image
-import utils_video
+import Utils_Image
+import Utils_Video
 import progressbar
 import os
 import cv2
@@ -399,7 +399,7 @@ def bbox_det_TENSORBOX_multiclass(frames_list,path_video_folder,hypes_file,weigh
             current_frame.frame=frameNr
             current_frame.filename=frames_list[i]
 
-            if utils_image.isnotBlack(frames_list[i]) & utils_image.check_image_with_pil(frames_list[i]):
+            if Utils_Image.isnotBlack(frames_list[i]) & Utils_Image.check_image_with_pil(frames_list[i]):
 
                 img = imread(frames_list[i])
                 # test(frames_list[i])

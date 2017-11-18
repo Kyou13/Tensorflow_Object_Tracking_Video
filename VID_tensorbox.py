@@ -1,8 +1,8 @@
 #### My import
 
 import argparse
-import utils_image
-import utils_video
+import Utils_Image
+import Utils_Video
 import Utils_Tensorbox
 import Utils_Imagenet
 import frame
@@ -43,13 +43,13 @@ def main():
     idl_filename=path_video_folder+'/'+path_video_folder+'.idl'
     frame_tensorbox=[]
     frame_inception=[]
-    frame_tensorbox, frame_inception = utils_video.extract_frames_incten(args.path_video, args.perc, path_video_folder, idl_filename )
+    frame_tensorbox, frame_inception = Utils_Video.extract_frames_incten(args.path_video, args.perc, path_video_folder, idl_filename )
 
     progress = progressbar.ProgressBar(widgets=[progressbar.Bar('=', '[', ']'), ' ',progressbar.Percentage(), ' ',progressbar.ETA()])
 
     for image_path in progress(frame_tensorbox):
-        utils_image.resizeImage(image_path)
-    utils_image.resizeImage(-1)
+        Utils_Image.resizeImage(image_path)
+    Utils_Image.resizeImage(-1)
 
     video_info=Utils_Tensorbox.bbox_det_TENSORBOX_multiclass(frame_tensorbox, path_video_folder, args.hypes, args.weights, pred_idl)
     tracked_video=utils_video.recurrent_track_objects(video_info)
