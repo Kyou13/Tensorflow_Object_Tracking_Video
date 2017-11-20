@@ -1,3 +1,4 @@
+i# -*- coding: UTF-8 -*-
 import copy 
 import Utils_Video
 
@@ -66,6 +67,7 @@ class Rectangle_Multiclass(object):
 
     def set_unlabeled_rect(self, cx, cy, width, height, confidence):
         # Set unlabeled rect info to be processed forward
+        # 未処理の矩形情報を処理するように設定
         self.cx = cx
         self.cy = cy
         self.width = width
@@ -121,7 +123,7 @@ class Rectangle_Multiclass(object):
     def check_rects_motion(self,filename, rect, dx1, dx2, dy1,dy2, error=1.2, attenuation=1.1):
         ## Rect is considered passed befor through add_delta
         if((self.x1-rect.x1)>dx1*error)| ((self.y1-rect.y1)>dy1*error)|((self.x2-rect.x2)>dx2*error)|((self.y2-rect.y2)>dy2*error):
-            utils_video.draw_rectangle(filename,(self.x1, self.y1,self.x2, self.y2))
+            Utils_Video.draw_rectangle(filename,(self.x1, self.y1,self.x2, self.y2))
             delta_cx=self.cx-rect.cx
             delta_cy=self.cy-rect.cy
             self.x1 =rect.x1 + delta_cx

@@ -174,6 +174,7 @@ def build_forward(H, x, googlenet, phase, reuse):
             conf_weights = tf.get_variable('conf_ip%d' % k,
                                            shape=(H['lstm_size'], H['num_classes']))
 
+            # matmul: 行列の掛け算
             pred_boxes_step = tf.reshape(tf.matmul(output, box_weights) * 50,
                                          [outer_size, 1, 4])
 
@@ -182,7 +183,8 @@ def build_forward(H, x, googlenet, phase, reuse):
                                          [outer_size, 1, H['num_classes']]))
  
         #pred_boxes = tf.concat(1, pred_boxes)
-        pred_boxes = tf.concat(pred_boxes,3)
+        # concat: Dim 1 [[xxxxyyyy],[xxxxyyyy],...]
+        pred_boxes = tf.concat(pred_boxes,1)
         #pred_logits = tf.concat(1, pred_logits)
         pred_logits = tf.concat(pred_logits,1)
         pred_logits_squash = tf.reshape(pred_logits,

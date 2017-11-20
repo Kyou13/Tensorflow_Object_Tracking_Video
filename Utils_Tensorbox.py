@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #### Import from Tensorbox Project
 
 import tensorflow as tf
@@ -213,6 +214,7 @@ def get_multiclass_rectangles(H, confidences, boxes, rnn_len):
                                  H["grid_width"],
                                  rnn_len,
                                  4))
+    # reshape 後ろから分割
     confidences_r = np.reshape(confidences, (-1,
                                              H["grid_height"],
                                              H["grid_width"],
@@ -231,6 +233,7 @@ def get_multiclass_rectangles(H, confidences, boxes, rnn_len):
                 w = bbox[2]
                 h = bbox[3]
                 # conf = np.max(confidences_r[0, y, x, n, 1:])
+                # max を取得
                 index, conf = get_silhouette_confidence(confidences_r[0, y, x, n, 1:])
                 # print index, conf
                 # print np.max(confidences_r[0, y, x, n, 1:])
@@ -240,9 +243,13 @@ def get_multiclass_rectangles(H, confidences, boxes, rnn_len):
                 new_rect.set_unlabeled_rect(abs_cx,abs_cy,w,h,conf)
                 all_rects[y][x].append(new_rect)
     # print "confidences_r" + str(confidences_r.shape)
-
+    # all_rects_r: [r,]のリスト作成 各要素はRectangle_multiclass
+    # Rectangle_Multiclass:
+    #   cx, cy, width, height, true_confidence, x1, x2, y1, y2
     all_rects_r = [r for row in all_rects for cell in row for r in cell]
+    # confidencesの値によって引く
     min_conf = get_higher_confidence(all_rects_r)
+    # 一定のconfidencesを超えるものを代入
     acc_rects=[rect for rect in all_rects_r if rect.true_confidence>min_conf]
     rects = []
     for rect in all_rects_r:
@@ -253,6 +260,7 @@ def get_multiclass_rectangles(H, confidences, boxes, rnn_len):
 	        r.y1 = rect.cy - rect.height/2.
 	        r.y2 = rect.cy + rect.height/2.
 	        r.score = rect.true_confidence
+                # label は "Not Set"
 	        r.silhouetteID=rect.label
 	        rects.append(r)
     print len(rects),len(acc_rects)
@@ -366,6 +374,7 @@ def bbox_det_TENSORBOX_multiclass(frames_list,path_video_folder,hypes_file,weigh
 
     tf.reset_default_graph()
     googlenet = googlenet_load.init(H)
+    # placeholderは引数
     x_in = tf.placeholder(tf.float32, name='x_in', shape=[H['image_height'], H['image_width'], 3])
 
     if H['use_rezoom']:
@@ -378,12 +387,14 @@ def bbox_det_TENSORBOX_multiclass(frames_list,path_video_folder,hypes_file,weigh
     else:
         pred_boxes, pred_logits, pred_confidences = build_forward(H, tf.expand_dims(x_in, 0), googlenet, 'test', reuse=None)
 
+    # パラメータを保存
     saver = tf.train.Saver()
 
     with tf.Session() as sess:
 
-
+# 変数を使うので初期化
         sess.run(tf.initialize_all_variables())
+# パラメータを読み込み
         saver.restore(sess, weights_file )##### Restore a Session of the Model to get weights and everything working
     
         #### Starting Evaluating the images
@@ -394,11 +405,12 @@ def bbox_det_TENSORBOX_multiclass(frames_list,path_video_folder,hypes_file,weigh
         frameNr=0
         skipped=0
         for i in progress(range(0, len(frames_list))):
-
+        # frameインスタンス生成
             current_frame = frame.Frame_Info()
             current_frame.frame=frameNr
             current_frame.filename=frames_list[i]
 
+        # ビットAND frameが黒じゃないとき
             if Utils_Image.isnotBlack(frames_list[i]) & Utils_Image.check_image_with_pil(frames_list[i]):
 
                 img = imread(frames_list[i])
@@ -406,6 +418,7 @@ def bbox_det_TENSORBOX_multiclass(frames_list,path_video_folder,hypes_file,weigh
                 feed = {x_in: img}
                 (np_pred_boxes,np_pred_logits, np_pred_confidences) = sess.run([pred_boxes,pred_logits, pred_confidences], feed_dict=feed)
 
+                # rects, acc_rects 
                 _,rects = get_multiclass_rectangles(H, np_pred_confidences, np_pred_boxes, rnn_len=H['rnn_len'])
                 if len(rects)>0:
                     # pick = NMS(rects)

@@ -1,4 +1,4 @@
-
+# -*- coding: UTF-8 -*-
 
 from PIL import Image, ImageChops,ImageDraw, ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -63,14 +63,15 @@ def resizeImage(file_path):
     if file_path is not -1:
         if check_image_with_pil(file_path):
             image = Image.open(file_path)
-            image.thumbnail(size, Image.ANTIALIAS)
+            image.thumbnail(size, Image.ANTIALIAS) # 縦横比維持したままresize
             image_size = image.size
 
             padding_0 = max( (size[0] - image_size[0]) / 2, 0 )
             padding_1 = max( (size[1] - image_size[1]) / 2, 0 )
             cv2.namedWindow('Original Image')
             cv2.namedWindow('Resized Image')
-            cv2.startWindowThread()
+            # Fixed
+            #cv2.startWindowThread()
             orig_img = cv2.imread(file_path, 0)
             cv2.imshow('Original Image',orig_img)
             cv2.waitKey(2)
@@ -298,19 +299,26 @@ def get_orig_rect(size_img_0, size_img_1, max_size_0, max_size_1,x1point, y1poin
 
 def centroid_histogram(clt):
     # grab the number of different clusters and create a histogram
+    # 異なるヒストグラムを取得し、ヒストグラム作成
     # based on the number of pixels assigned to each cluster
+    # pixelの番号に基づいて割当て
+    # [0~5]配列生成 unique:重複取り除くclt.labels_:1920*1080
     numLabels = np.arange(0, len(np.unique(clt.labels_)) + 1)
+    # hist:ラベルに対応する数をそれぞれ
     (hist, _) = np.histogram(clt.labels_, bins = numLabels)
  
     # normalize the histogram, such that it sums to one
     hist = hist.astype("float")
+
     hist /= hist.sum()
     # return the histogram
     return hist
 
 def closest_colour(requested_colour):
+# もっとも重心に近い色を選択
     min_colours = {}
     for key, name in webcolors.css3_hex_to_names.items():
+        # #xxxxxxをrgbに変換
         r_c, g_c, b_c = webcolors.hex_to_rgb(key)
         rd = (r_c - requested_colour[0]) ** 2
         gd = (g_c - requested_colour[1]) ** 2
@@ -327,11 +335,16 @@ def get_colour_name(requested_colour):
 def get_dominant_color(file_path):
 
     image = cv2.imread(file_path)
+    # 色空間変換 
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # shape: [height,width,channel]
+    # 3-> 2
     image = image.reshape((image.shape[0] * image.shape[1], 3))
+    # クラスタリング (引数:クラスタ数)
     clt = KMeans(n_clusters = 4)
     clt.fit(image)
     hist = centroid_histogram(clt)
+    #重心()
     return hist, (get_colour_name(clt.cluster_centers_[0]),get_colour_name(clt.cluster_centers_[1]),get_colour_name(clt.cluster_centers_[2]),get_colour_name(clt.cluster_centers_[3]))
 
 def isnotBlack(file_path):

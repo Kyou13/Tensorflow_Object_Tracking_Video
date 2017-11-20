@@ -159,9 +159,9 @@ def label_video(video_info, frames):
             for rect in frame_info.rects:
                 
                 img= Image.open(frames[idx])
-                width, height= utils_image.get_Image_Size(frames[idx])
+                width, height= Utils_Image.get_Image_Size(frames[idx])
                 print rect.x1,rect.y1,rect.x2 ,rect.y2
-                x1,y1,x2,y2=utils_image.get_orig_rect(width, height, 640, 480, rect.x1,rect.y1,rect.x2 ,rect.y2)
+                x1,y1,x2,y2=Utils_Image.get_orig_rect(width, height, 640, 480, rect.x1,rect.y1,rect.x2 ,rect.y2)
                 print x1,y1,x2,y2
                 if(x1==x2):
                     x2=x2-10
@@ -227,9 +227,9 @@ def recurrent_label_video(video_info, frames):
             for rect in frame_info.rects:
                 
                 img= Image.open(frames[idx])
-                width, height= utils_image.get_Image_Size(frames[idx])
+                width, height= Utils_Image.get_Image_Size(frames[idx])
                 print rect.x1,rect.y1,rect.x2 ,rect.y2
-                x1,y1,x2,y2=utils_image.get_orig_rect(width, height, 640, 480, rect.x1,rect.y1,rect.x2 ,rect.y2)
+                x1,y1,x2,y2=Utils_Image.get_orig_rect(width, height, 640, 480, rect.x1,rect.y1,rect.x2 ,rect.y2)
                 print x1,y1,x2,y2
                 cor = (min(x1,x2),min(y1,y2),max(x1,x2),max(y1,y2))
                 print cor

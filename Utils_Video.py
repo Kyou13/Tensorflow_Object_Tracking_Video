@@ -60,13 +60,14 @@ def make_tracked_video(out_vid_path, labeled_video_frames):
         print "Reading Filename: %s"%labeled_video_frames[0]
         h, w = img.shape[:2]
         print "Video Size: width: %d height: %d"%(h, w)
-        fourcc = cv2.cv.CV_FOURCC('m', 'p', '4', 'v')
+        #fourcc = cv2.cv.CV_FOURCC('m', 'p', '4', 'v')
+        fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
         out = cv2.VideoWriter(out_vid_path,fourcc, 20.0, (w, h), True)
         print("Start Making File Video:%s " % out_vid_path)
         print("%d Frames to Compress"%len(labeled_video_frames))
         progress = progressbar.ProgressBar(widgets=[progressbar.Bar('=', '[', ']'), ' ',progressbar.Percentage(), ' ',progressbar.ETA()])
         for i in progress(range(0,len(labeled_video_frames))):
-            if utils_image.check_image_with_pil(labeled_video_frames[i]):
+            if Utils_Image.check_image_with_pil(labeled_video_frames[i]):
                 out.write(img)
                 img = cv2.imread(labeled_video_frames[i], True)
         out.release()
