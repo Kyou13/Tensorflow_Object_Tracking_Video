@@ -29,10 +29,11 @@ def main():
     # parser.add_argument('--result_folder', default='summary_result/', type=str)
     # parser.add_argument('--summary_file', default='results.txt', type=str)
     parser.add_argument('--output_name', default='output.mp4', type=str)
-    parser.add_argument('--hypes', default='./TENSORBOX/hypes/overfeat_rezoom.json', type=str)
-    parser.add_argument('--weights', default='./TENSORBOX/data/save.ckpt-1250000', type=str)
+    #parser.add_argument('--hypes', default='./TENSORBOX/hypes/overfeat_rezoom.json', type=str)
+    parser.add_argument('--hypes', default='./TENSORBOX/data/lstm/hypes.json', type=str)
+    parser.add_argument('--weights', default='./TENSORBOX/data/lstm/save.ckpt-400000', type=str)
     parser.add_argument('--perc', default=100, type=int)
-    parser.add_argument('--path_video', default='ILSVRC2015_val_00004000.mp4', type=str)# required=True, type=str)
+    parser.add_argument('--path_video', default='02dpm_libx264.mp4', type=str)# required=True, type=str)
 
     args = parser.parse_args()
 
@@ -52,12 +53,18 @@ def main():
     # ReSize tensorbox(640*480)
     for image_path in progress(frame_tensorbox):
         Utils_Image.resizeImage(image_path)
+    # ウィンドウ削除
     Utils_Image.resizeImage(-1)
-# ----------------------------------------------------------------------#
-    video_info=Utils_Tensorbox.bbox_det_TENSORBOX_multiclass(frame_tensorbox, path_video_folder, args.hypes, args.weights, pred_idl)
+
+    ##video_info=utils_tensorbox.bbox_det_tensorbox_multiclass(frame_tensorbox, path_video_folder, args.hypes, args.weights, pred_idl)
+
+    ## fixed
+    video_info=utils_tensorbox.bbox_det_tensorbox_multiclass(frame_tensorbox, path_video_folder, args.hypes, args.weights)
+    # previousフレームと比較してtrackingし、id付加、矩形描写を行う
     tracked_video=Utils_Video.recurrent_track_objects(video_info)
     # tracked_video=utils_video.track_objects(video_info)
     # labeled_video=Utils_Imagenet.label_video(tracked_video, frame_inception)
+# ----------------------------------------------------------------------#
     labeled_video=Utils_Imagenet.recurrent_label_video(tracked_video, frame_inception)
     # tracked_video=utils_video.track_objects(video_info)
 

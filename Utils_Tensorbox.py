@@ -11,7 +11,7 @@ import sys
 
 # import sys
 # sys.path.insert(0, 'TENSORBOX')
-sys.path.insert(0, 'TENSORBOX')
+#sys.path.insert(0, 'TENSORBOX')
 
 # Original
 from utils import googlenet_load, train_utils, rect_multiclass
@@ -49,6 +49,9 @@ import cv2
 
 ####### FUNCTIONS DEFINITIONS
 
+# フレームごとの全BOXを返す
+# return List[Rects]
+# Non-Maximal Suppression 非最大化抑制
 def NMS(rects,overlapThresh=0.3):
     # if there are no boxes, return an empty list
     if len(rects) == 0:
@@ -58,13 +61,18 @@ def NMS(rects,overlapThresh=0.3):
     # initialize the list of picked indexes
     pick = []
     x1, x2, y1, y2, conf=[],[],[],[], []
+    #f = open('NMS.txt', 'w')
     for rect in rects:
         x1.append(rect.x1)
         x2.append(rect.x2)
         y1.append(rect.y1)
         y2.append(rect.y2)
         conf.append(rect.true_confidence)
+   #     f.write(str(rect.x1)+" "+str(rect.y1)+" "+str(rect.x2)+" "+str(rect.y2)+"\n")
+   # f.close()
+
     # grab the coordinates of the bounding boxes
+    # numpy.arrayに変換
     x1 = np.array(x1)
     y1 = np.array(y1)
     x2 = np.array(x2)
@@ -72,7 +80,9 @@ def NMS(rects,overlapThresh=0.3):
     conf = np.array(conf)
     # compute the area of the bounding boxes and sort the bounding
     # boxes by the bottom-right y-coordinate of the bounding box
+    # +1 の意味とは
     area = (x2 - x1 + 1) * (y2 - y1 + 1)
+    # 昇順
     idxs = np.argsort(conf)
     # keep looping while some indexes still remain in the indexes
     # list
@@ -82,7 +92,10 @@ def NMS(rects,overlapThresh=0.3):
         # the suppression list (i.e. indexes that will be deleted)
         # using the last index
         last = len(idxs) - 1
+        # その時のconfidenceが高いものに対応するidx
+        # list
         i = idxs[last]
+        # リストに対応するidxを追加
         pick.append(i)
         suppress = [last]
         # loop over all indexes in the indexes list
@@ -99,6 +112,7 @@ def NMS(rects,overlapThresh=0.3):
             yy2 = min(y2[i], y2[j])
 
             # compute the width and height of the bounding box
+            # 重なり部分のwidth, height
             w = max(0, xx2 - xx1 + 1)
             h = max(0, yy2 - yy1 + 1)
  
@@ -111,17 +125,87 @@ def NMS(rects,overlapThresh=0.3):
 
             # if there is sufficient overlap, suppress the
             # current bounding box
+            # 閾値を超えたものを追加 suppressの先頭は対象のbox
             if (overlap > overlapThresh):
                 suppress.append(pos)
  
         # delete all indexes from the index list that are in the
         # suppression list
+        # 対象のboxとそれにoverlapしているboxをindexから削除
         idxs = np.delete(idxs, suppress)
  
     # return only the bounding boxes that were picked
+    # pickは代表するidxs入ってるList
     picked =[]
     for i in pick: picked.append(rects[i])
     return picked
+
+# poped_rectと対応するrectsを取り除き,new_rectsをみつける
+def FixedNMS(rects,poped_rects,overlapThresh=0.3):
+    # if there are no boxes, return an empty list
+    if len(rects) == 0:
+        print "WARNING: Passed Empty Boxes Array"
+        return []
+ 
+    pick = []
+    for p_rect in poped_rects:
+        idx = 0
+        for rect in rects:
+            # find the largest (x, y) coordinates for the start of
+            # the bounding box and the smallest (x, y) coordinates
+            # for the end of the bounding box
+            xx1 = max(p_rect.x1, rect.x1)
+            yy1 = max(p_rect.y1, rect.y1)
+            xx2 = min(p_rect.x2, rect.x2)
+            yy2 = min(p_rect.y2, rect.y2)
+
+            # compute the width and height of the bounding box
+            # 重なり部分のwidth, height
+            w = max(0, xx2 - xx1 + 1)
+            h = max(0, yy2 - yy1 + 1)
+ 
+            # compute the ratio of overlap between the computed
+            # bounding box and the bounding box in the area list
+            area = (rect.x2 - rect.x1 + 1) * (rect.y2 - rect.y1 + 1)
+            overlap = float(w * h) / area
+            # union = area[j] + float(w * h) - overlap
+
+            # iou = overlap/union
+
+            # if there is sufficient overlap, suppress the
+            # current bounding box
+            # 閾値を超えたものを追加 suppressの先頭は対象のbox
+            if (overlap > overlapThresh):
+                pick.append(idx)
+            idx += 1
+ 
+        # delete all indexes from the index list that are in the
+        # suppression list
+        # 対象のboxとそれにoverlapしているboxをindexから削除
+ 
+    # return only the bounding boxes that were picked
+    # pickは代表するidxs入ってるList
+    pick_uniq = list(set(pick))
+    #print("before_pick_uniq:")
+    #print(pick_uniq)
+    all_rects = range(len(rects))
+    #print("all_Rects:")
+    #print(all_rects)
+    all_rects = np.array(all_rects)
+    pick_uniq = np.delete(all_rects,pick_uniq)
+    #print("pick_uniq:")
+    #print(pick_uniq)
+
+    picked =[]
+    for i in pick_uniq: picked.append(rects[i])
+    return picked
+
+def rectsToText(rects,filename):
+    filename = filename+'.txt'
+    f = open(filename, 'w')
+    for rect in rects:
+        f.write(str(rect.x1)+" "+str(rect.y1)+" "+str(rect.x2)+" "+str(rect.y2)+"\n")
+    f.close()
 
 def getTextIDL(annotations):
 
@@ -355,7 +439,7 @@ def get_multiclass_rectangles(H, confidences, boxes, rnn_len):
 
 #     return det_frames_list
 
-def bbox_det_TENSORBOX_multiclass(frames_list,path_video_folder,hypes_file,weights_file,pred_idl):
+def bbox_det_TENSORBOX_multiclass(frames_list,path_video_folder,hypes_file,weights_file):
     
     from train import build_forward
 

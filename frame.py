@@ -142,7 +142,8 @@ def saveVideoResults(filename, annotations):
         if annotation.frame is not -1:
             frame=annotation.frame
         for rect in annotation.rects:
-            if vid_classes.class_string_to_comp_code(rect.label) is not 'nothing':
+            #if vid_classes.class_string_to_comp_code(rect.label) is not 'nothing':
+            if vid_classes.class_string_to_comp_code(rect.label) is not None:
                 silhouette=rect.label
             if rect.trackID is not -1:
                 trackID=rect.trackID

@@ -147,7 +147,8 @@ def label_video(video_info, frames):
     create_graph()
     saver = tf.train.Saver()  # defaults to saving all variables - in this case w and b
     with tf.Session() as sess:
-        sess.run(tf.initialize_all_variables())
+        #sess.run(tf.initialize_all_variables())
+        sess.run(tf.global_variables_initializer())
         # load_checkpoint(sess, saver)
         softmax_tensor = sess.graph.get_tensor_by_name('final_result:0')
         idx=0
@@ -202,6 +203,7 @@ def recurrent_label_video(video_info, frames):
 
     progress = progressbar.ProgressBar(widgets=[progressbar.Bar('=', '[', ']'), ' ',progressbar.Percentage(), ' ',progressbar.ETA()])
     decomposed_path =frames[0].split("/")
+    # folder dirt
     folder = decomposed_path[len(decomposed_path)-2]
     if not os.path.exists(folder+"/cropped_rects/"):
     	os.makedirs(folder+"/cropped_rects/")
@@ -213,7 +215,8 @@ def recurrent_label_video(video_info, frames):
     create_graph()
     saver = tf.train.Saver()  # defaults to saving all variables - in this case w and b
     with tf.Session() as sess:
-        sess.run(tf.initialize_all_variables())
+        #sess.run(tf.initialize_all_variables())
+        sess.run(tf.global_variables_initializer())
         # load_checkpoint(sess, saver)
         softmax_tensor = sess.graph.get_tensor_by_name('final_result:0')
         idx=0
@@ -231,7 +234,23 @@ def recurrent_label_video(video_info, frames):
                 print rect.x1,rect.y1,rect.x2 ,rect.y2
                 x1,y1,x2,y2=Utils_Image.get_orig_rect(width, height, 640, 480, rect.x1,rect.y1,rect.x2 ,rect.y2)
                 print x1,y1,x2,y2
-                cor = (min(x1,x2),min(y1,y2),max(x1,x2),max(y1,y2))
+                # add
+                
+                x1 = min(x1,x2)
+                y1 = min(y1,y2)
+
+                if not x1+1.0 < max(x1,x2):
+                    x2 = max(x1,x2) + 1.0
+                else:
+                    x2 = max(x1,x2)
+                        
+                if not y1+1.0 < max(y1,y2):
+                    y2 = max(y1,y2) + 1.0
+                else:
+                    y2 = max(y1,y2)
+                #cor = (min(x1,x2),min(y1,y2),max(x1,x2),max(y1,y2))
+                cor = (x1,y1,x2,y2)
+                
                 print cor
                 cropped_img=img.crop(cor)
                 cropped_img_name=folder+"/cropped_rects/cropped_frame_%d_rect_%d.JPEG"%(frame_info.frame, rect_id)

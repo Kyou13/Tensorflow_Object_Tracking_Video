@@ -1,4 +1,4 @@
-i# -*- coding: UTF-8 -*-
+# -*- coding: UTF-8 -*-
 import copy 
 import Utils_Video
 
@@ -123,9 +123,12 @@ class Rectangle_Multiclass(object):
     def check_rects_motion(self,filename, rect, dx1, dx2, dy1,dy2, error=1.2, attenuation=1.1):
         ## Rect is considered passed befor through add_delta
         if((self.x1-rect.x1)>dx1*error)| ((self.y1-rect.y1)>dy1*error)|((self.x2-rect.x2)>dx2*error)|((self.y2-rect.y2)>dy2*error):
+            # 矩形を記述
             Utils_Video.draw_rectangle(filename,(self.x1, self.y1,self.x2, self.y2))
+            # current_frame - previous_frame
             delta_cx=self.cx-rect.cx
             delta_cy=self.cy-rect.cy
+            # previous_frae + delta_cx
             self.x1 =rect.x1 + delta_cx
             self.y1 =rect.y1 + delta_cy
             self.x2 =rect.x2 + delta_cx
@@ -155,7 +158,10 @@ class Rectangle_Multiclass(object):
 
     ### Computation Functions
 
+# 現在フレームのrectからmax_iouなdect除く
     def overlaps(self, other):
+        # 絶対値
+        # 多分画像サイズが3:4だから...?
         if abs(self.cx - other.cx) > (self.width + other.width) / 1.5:
             return False
         elif abs(self.cy - other.cy) > (self.height + other.height) / 2.0:
@@ -166,6 +172,7 @@ class Rectangle_Multiclass(object):
         return sum(map(abs, [self.cx - other.cx, self.cy - other.cy,
                        self.width - other.width, self.height - other.height]))
     def intersection(self, other):
+        # selfはprevious
         left = max(self.cx - self.width/2., other.cx - other.width/2.)
         right = min(self.cx + self.width/2., other.cx + other.width/2.)
         width = max(right - left, 0)
@@ -177,6 +184,7 @@ class Rectangle_Multiclass(object):
         return self.height * self.width
     def union(self, other):
         return self.area() + other.area() - self.intersection(other)
+    # other: rectangle
     def iou(self, other):
         return self.intersection(other) / self.union(other)
     def __eq__(self, other):
@@ -244,23 +252,31 @@ def duplicate_rects(rects):
         new_rect.y2 = copy.copy(rect.y2)
         new_rects.append(new_rect)
     return new_rects
-
+# 返り値:max_iouな現在フレームのrect
+# (current, previous)
 def pop_max_iou(rects, rect):
     max_iou=None
     max_id=0
     rect_id=0
+    # previous , corrent frameでmax_iouを計算
+    # 軸はprebious
     for rectangle in rects:
+        # 最初のみ
         if max_iou is None:
             max_iou=rect.iou(rectangle)
             max_id=rect_id
+            
         if rect.iou(rectangle)>max_iou:
             max_iou=rect.iou(rectangle)
             max_id=rect_id
         rect_id=rect_id+1
+        # 以下のif必要？
     if len(rects)>max_id:
+        # max_iouなrectを代入
         new_rect=rects[max_id].duplicate()
+        # 現在フレームのrectからmax_iouなdect除く
         rects.pop(max_id)
-        return new_rect
+        return new_rect 
     else: return None 
 
 def pop_max_overlap(rects, rect):
