@@ -260,7 +260,7 @@ def recurrent_track_objects(video_info):
                     print("TOP::rect.trackID:{0},tmp_trackID:{1}".format(rect.trackID,tmp_trackID))
                     if rect.trackID >= tmp_trackID :
                     #for rect in previous_frame.rects:
-                        print "A"+str(len(current_frame.rects))
+                        print "Before"+str(len(current_frame.rects))
                         current_rect = multiclass_rectangle.pop_max_iou(frame_info.rects,rect)
                         # Add
                         if current_rect is not None:
@@ -321,6 +321,8 @@ def recurrent_track_objects(video_info):
                 Utils_Tensorbox.rectsToText(picked_rects,'picked_rects'+str(frame_info.frame))
                 #print("ADD:frame_info.rects:{0}".format(len(frame_info.rects)))
                 tmp_trackID = trackID
+                # この時点ではtmp_trackIDは使われてないIDの先頭
+
                 print("tmp_trackID:{0}".format(tmp_trackID))
                 # rect: Rectangle_Multiclass Object
                 # bboxにIDを付加
@@ -333,6 +335,7 @@ def recurrent_track_objects(video_info):
                     current_frame.append_labeled_rect(current_rect)
                     trackID=trackID+1
                 print("new_trackID:{0}".format(trackID))
+                # 次のループのCurrent Frame objとnew_trackID-1は同じ
 
             # 2フレーム目        
             else:
