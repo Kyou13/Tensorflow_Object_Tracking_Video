@@ -19,7 +19,7 @@ class Rectangle_Multiclass(object):
         self.cy = -1
         self.width = -1
         self.height = -1
-        self.true_confidence = -1
+        self.confidence = -1
         self.x1 = -1
         self.x2 = -1
         self.y1 = -1
@@ -52,7 +52,7 @@ class Rectangle_Multiclass(object):
         self.trackID=trackID
 
         self.label_confidence=label_conf
-        self.true_confidence=rect_conf
+        self.confidence=rect_conf
 
     def load_BBox(self, x1, x2, y1, y2, label, label_chall, code):
 
@@ -72,7 +72,7 @@ class Rectangle_Multiclass(object):
         self.cy = cy
         self.width = width
         self.height = height
-        self.true_confidence = confidence
+        self.confidence = confidence
         self.x1 = self.cx - self.width/2.
         self.x2 = self.cx + self.width/2.
         self.y1 = self.cy - self.height/2.
@@ -124,7 +124,7 @@ class Rectangle_Multiclass(object):
         ## Rect is considered passed befor through add_delta
         if((self.x1-rect.x1)>dx1*error)| ((self.y1-rect.y1)>dy1*error)|((self.x2-rect.x2)>dx2*error)|((self.y2-rect.y2)>dy2*error):
             # 矩形を記述
-            Utils_Video.draw_rectangle(filename,(self.x1, self.y1,self.x2, self.y2))
+            #Utils_Video.draw_rectangle(filename,(self.x1, self.y1,self.x2, self.y2))
             # current_frame - previous_frame
             delta_cx=self.cx-rect.cx
             delta_cy=self.cy-rect.cy
@@ -146,7 +146,7 @@ class Rectangle_Multiclass(object):
         new_rect.cy = copy.copy(self.cy)
         new_rect.width = copy.copy(self.width)
         new_rect.height = copy.copy(self.height)
-        new_rect.true_confidence = copy.copy(self.true_confidence)
+        new_rect.confidence = copy.copy(self.confidence)
         new_rect.label_confidence = copy.copy(self.label_confidence)
         new_rect.label= copy.copy(self.label)
         new_rect.trackID=copy.copy(self.trackID)
@@ -242,7 +242,7 @@ def duplicate_rects(rects):
         new_rect.cy = copy.copy(rect.cy)
         new_rect.width = copy.copy(rect.width)
         new_rect.height = copy.copy(rect.height)
-        new_rect.true_confidence = copy.copy(rect.true_confidence)
+        new_rect.confidence = copy.copy(rect.confidence)
         new_rect.label_confidence = copy.copy(rect.label_confidence)
         new_rect.label= copy.copy(rect.label)
         new_rect.trackID=copy.copy(rect.trackID)

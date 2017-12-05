@@ -174,7 +174,7 @@ def label_video(video_info, frames):
                 cropped_img=img.crop(cor)
                 cropped_img_name=frames[0].split("/")[0]+"/cropped_rects/cropped_frame_%d_rect_%d.JPEG"%(frame_info.frame, rect_id)
                 cropped_img.save(cropped_img_name)
-                print "Frame: %d Rect: %d conf: %.2f"%(frame_info.frame, rect_id, rect.true_confidence)
+                print "Frame: %d Rect: %d conf: %.2f"%(frame_info.frame, rect_id, rect.confidence)
                 if not tf.gfile.Exists(cropped_img_name):
                     tf.logging.fatal('File does not exist %s', cropped_img_name)
                     sys.exit()
@@ -261,7 +261,7 @@ def recurrent_label_video(video_info, frames):
                 cropped_img=img.crop(cor)
                 cropped_img_name=folder+"/cropped_rects/cropped_frame_%d_rect_%d.JPEG"%(frame_info.frame, rect_id)
                 cropped_img.save(cropped_img_name)
-                print "Frame: %d Rect: %d conf: %.2f"%(frame_info.frame, rect_id, rect.true_confidence)
+                print "Frame: %d Rect: %d conf: %.2f"%(frame_info.frame, rect_id, rect.confidence)
                 if not tf.gfile.Exists(cropped_img_name):
                     tf.logging.fatal('File does not exist %s', cropped_img_name)
                     sys.exit()

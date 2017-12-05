@@ -101,7 +101,7 @@ def NMS(rects,overlapThresh=0.3):
         x2.append(rect.x2)
         y1.append(rect.y1)
         y2.append(rect.y2)
-        conf.append(rect.true_confidence)
+        conf.append(rect.confidence)
     # grab the coordinates of the bounding boxes
     x1 = np.array(x1)
     y1 = np.array(y1)
@@ -215,8 +215,8 @@ def get_higher_confidence(rectangles):
 
     for rect in rectangles:
         # print "conf_sil I : " + str(silhouettes_confidence[i])
-        if rect.true_confidence>higher:
-            higher = rect.true_confidence
+        if rect.confidence>higher:
+            higher = rect.confidence
     # print str(index+1),str(higher)
     # print "higher: %.2f"%higher
     higher=higher*10
@@ -230,6 +230,7 @@ def get_higher_confidence(rectangles):
     if(higher<0.3):
         return  higher-0.1
     else: return  higher-0.2
+
 def get_multiclass_rectangles(H, confidences, boxes, rnn_len):
     boxes_r = np.reshape(boxes, (-1,
                                  H["grid_height"],
@@ -264,31 +265,43 @@ def get_multiclass_rectangles(H, confidences, boxes, rnn_len):
                 new_rect=multiclass_rectangle.Rectangle_Multiclass()
                 new_rect.set_unlabeled_rect(abs_cx,abs_cy,w,h,conf)
                 all_rects[y][x].append(new_rect)
+
     # print "confidences_r" + str(confidences_r.shape)
     # all_rects_r: [r,]のリスト作成 各要素はRectangle_multiclass
     # Rectangle_Multiclass:
-    #   cx, cy, width, height, true_confidence, x1, x2, y1, y2
+    #   cx, cy, width, height, confidence, x1, x2, y1, y2
     all_rects_r = [r for row in all_rects for cell in row for r in cell]
+    #print("len(all_rects):{0}".format(len(all_rects_r)))
     # confidencesの値によって引く
-    ## min_conf = get_higher_confidence(all_rects_r)
-    min_conf = 0.1
+    #min_conf = get_higher_confidence(all_rects_r)
+    min_conf = 0.2
     # 一定のconfidencesを超えるものを代入
     # tensorboxの赤枠にあたるもの？
-    acc_rects=[rect for rect in all_rects_r if rect.true_confidence>min_conf]
-    rects = []
-    for rect in all_rects_r:
-    	if rect.true_confidence>min_conf:
-	        r = al.AnnoRect()
-	        r.x1 = rect.cx - rect.width/2.
-	        r.x2 = rect.cx + rect.width/2.
-	        r.y1 = rect.cy - rect.height/2.
-	        r.y2 = rect.cy + rect.height/2.
-	        r.score = rect.true_confidence
-                # label は "Not Set"
-	        r.silhouetteID=rect.label
-	        rects.append(r)
-    print len(rects),len(acc_rects)
-    return rects, acc_rects
+    # add 2 sentence
+    from origin_utils.stitch_wrapper import stitch_rects
+    acc_rects = stitch_rects(all_rects,0.25)
+    #Rect to multiclass_rectangle
+    acc_rects=[rect for rect in acc_rects if rect.confidence > min_conf]
+    print("first_len(acc_rects):{0}".format(len(acc_rects)))
+    #acc_rects=[rect for rect in all_rects_r if rect.confidence>min_conf]
+#    rects = []
+#    #for rect in all_rects_r:
+#    # add
+#    for rect in acc_rects:
+#    	if rect.confidence>min_conf:
+#	        r = al.AnnoRect()
+#	        r.x1 = rect.cx - rect.width/2.
+#	        r.x2 = rect.cx + rect.width/2.
+#	        r.y1 = rect.cy - rect.height/2.
+#	        r.y2 = rect.cy + rect.height/2.
+#	        r.score = rect.confidence
+#                # label は "Not Set"
+#	        r.silhouetteID=rect.label
+#	        rects.append(r)
+#    print len(rects),len(acc_rects)
+    print len(acc_rects)
+    #return rects, acc_rects
+    return acc_rects
 
 def bbox_det_TENSORBOX_multiclass(frames_list,H,args,pred_idl):
     # add
@@ -344,8 +357,9 @@ def bbox_det_TENSORBOX_multiclass(frames_list,H,args,pred_idl):
                 feed = {x_in: img}
                 # (np_pred_boxes, np_pred_confidences) = sess.run([pred_boxes, pred_confidences], feed_dict=feed)
                 (np_pred_boxes, np_pred_confidences) = sess.run([pred_boxes, pred_confidences], feed_dict=feed)
-                # add
-                _,rects = get_multiclass_rectangles(H, np_pred_confidences, np_pred_boxes, rnn_len=H['rnn_len'])
+                # fix
+                #_,rects = get_multiclass_rectangles(H, np_pred_confidences, np_pred_boxes, rnn_len=H['rnn_len'])
+                rects = get_multiclass_rectangles(H, np_pred_confidences, np_pred_boxes, rnn_len=H['rnn_len'])
                 if len(rects)>0:
                     # pick = NMS(rects)
                     pick = rects
@@ -414,10 +428,9 @@ def main():
     frame_inception = []
     frame_tensorbox, frame_inception = Utils_Video.extract_frames_incten(args.path_video, args.perc, path_video_folder, idl_filename)
     progress = progressbar.ProgressBar(widgets=[progressbar.Bar('=', '[', ']'), ' ',progressbar.Percentage(), ' ',progressbar.ETA()])
-    for image_path in progress(frame_tensorbox):
-        Utils_Image.resizeImage(image_path)
-    Utils_Image.resizeImage(-1)
-
+    #for image_path in progress(frame_tensorbox):
+    #    Utils_Image.resizeImage(image_path)
+    #Utils_Image.resizeImage(-1)
     # add
     video_info=bbox_det_TENSORBOX_multiclass(frame_tensorbox, H, args, pred_idl)
 

@@ -47,7 +47,7 @@ def draw_rectangles(path_video_folder, labeled_video_frames):
             top_left = (int(bb_rect.x1),int(bb_rect.y1)) # DA VERIFICARE Try_2 (x1,y1, x2,y2) cor = (bb_rect.left() ,bb_rect.right(),bb_rect.bottom(),bb_rect.top()) Try_1
             under_right = (int(bb_rect.x2) ,int(bb_rect.y2))
 
-            if bb_rect.trackID is -1:
+            if bb_rect.trackID is 100:
                 outline_class=(240,255,240)
                 # Add
                 continue
@@ -200,18 +200,19 @@ def extract_frames_incten(vid_path, video_perc, path_video_folder, idl_filename)
     
     # total = int((vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)/100)*video_perc)
     # Fixed
+    #total = int((vidcap.get(7)/100)*video_perc)
     total = int((vidcap.get(7)/100)*video_perc)
     
     print("%d Frames to Read"%total)
     progress = progressbar.ProgressBar(widgets=[progressbar.Bar('=', '[', ']'), ' ',progressbar.Percentage(), ' ',progressbar.ETA()])
     image = vidcap.read()
     with open(idl_filename, 'w') as f:
-        for i in progress(range(0,total)):
+        for i in progress(range(1,total+1)):
             #frame_name="%s/%s/fram%d.jpeg"%(path_video_folder,folder_path_frames,i)
-            list_tensorbox.append("%s/%sframe%d.jpeg"%(path_video_folder,"frames_tensorbox/",i))
-            cv2.imwrite("%s/%sframe%d.jpeg"%(path_video_folder,"frames_tensorbox/",i), image[1])     # save frame as JPEG file
-            list_inception.append("%s/%sframe%d.jpeg"%(path_video_folder,"frames_inception/",i))
-            cv2.imwrite("%s/%sframe%d.jpeg"%(path_video_folder,"frames_inception/",i), image[1])     # save frame as JPEG file
+            list_tensorbox.append("%s/%s00000%d.jpg"%(path_video_folder,"frames_tensorbox/",i))
+            #cv2.imwrite("%s/%sframe%d.jpeg"%(path_video_folder,"frames_tensorbox/",i), image[1])     # save frame as JPEG file
+            list_inception.append("%s/%s00000%d.jpg"%(path_video_folder,"frames_inception/",i))
+            #cv2.imwrite("%s/%sframe%d.jpeg"%(path_video_folder,"frames_inception/",i), image[1])     # save frame as JPEG file
             image = vidcap.read()
 
     print("Finish Reading File Video:%s " % vid_path)
@@ -308,7 +309,7 @@ def recurrent_track_objects(video_info):
                         print("previous_rect:" + str(rect.x1) + ',' +str(rect.y1) + ','+str(rect.x2) + ',' +str(rect.y2) + '\n')
                         # 枠外に行ったら消す      
                         if current_rect.x1 < 0 or current_rect.y1 < 0 or current_rect.x2 < 0 or current_rect.y2 < 0 :
-                            current_rect.load_trackID(-1)
+                            current_rect.load_trackID(100)
 
                         deltas_frame.append((dx1,dx2,dy1,dy2))
                     else: break
@@ -507,7 +508,7 @@ def track_and_label_objects(video_info):
                     print "Lenght previous rects array: %d"%len(previous_frame.rects)
                     print "max_rect track ID: %d"%previous_frame.rects[max_id].trackID
                     print "max_rect label: %s"%previous_frame.rects[max_id].label
-                    current_rect.load_labeled_rect(previous_frame.rects[max_id].trackID, previous_frame.rects[max_id].true_confidence, previous_frame.rects[max_id].label_confidence, previous_frame.rects[max_id].x1,previous_frame.rects[max_id].y1,previous_frame.rects[max_id].x2 ,previous_frame.rects[max_id].y2, previous_frame.rects[max_id].label, previous_frame.rects[max_id].label_chall, previous_frame.rects[max_id].label_code)
+                    current_rect.load_labeled_rect(previous_frame.rects[max_id].trackID, previous_frame.rects[max_id].confidence, previous_frame.rects[max_id].label_confidence, previous_frame.rects[max_id].x1,previous_frame.rects[max_id].y1,previous_frame.rects[max_id].x2 ,previous_frame.rects[max_id].y2, previous_frame.rects[max_id].label, previous_frame.rects[max_id].label_chall, previous_frame.rects[max_id].label_code)
                     current_frame.append_labeled_rect(current_rect)
                     rect.load_label(previous_frame.rects[max_id].trackID,previous_frame.rects[max_id].label_confidence, previous_frame.rects[max_id].label, previous_frame.rects[max_id].label_chall, previous_frame.rects[max_id].label_code)
                     previous_frame.rects.pop(max_id)
@@ -529,7 +530,7 @@ def track_and_label_objects(video_info):
 
                     label, confidence = Utils_Imagenet.run_inception_once(cropped_img_name)
                     rect.load_label(trackID,confidence, vid_classes.code_to_class_string(label), vid_classes.code_to_code_chall(vid_classes), label)
-                    current_rect.load_labeled_rect(trackID, rect.true_confidence, confidence, rect.x1,rect.y1,rect.x2 ,rect.y2, vid_classes.code_to_class_string(label), vid_classes.code_to_code_chall(vid_classes), label)
+                    current_rect.load_labeled_rect(trackID, rect.confidence, confidence, rect.x1,rect.y1,rect.x2 ,rect.y2, vid_classes.code_to_class_string(label), vid_classes.code_to_code_chall(vid_classes), label)
                     print "current_rect track ID: %d"%current_rect.trackID
                     print "current_rect label: %s"%current_rect.label
                     current_frame.append_labeled_rect(current_rect)
@@ -550,7 +551,7 @@ def track_and_label_objects(video_info):
 
                 label, confidence = Utils_Imagenet.run_inception_once(cropped_img_name)
                 rect.load_label(trackID,confidence, vid_classes.code_to_class_string(label), vid_classes.code_to_code_chall(vid_classes), label)
-                current_rect.load_labeled_rect(trackID, rect.true_confidence, confidence, rect.x1,rect.y1,rect.x2 ,rect.y2, vid_classes.code_to_class_string(label), vid_classes.code_to_code_chall(vid_classes), label)
+                current_rect.load_labeled_rect(trackID, rect.confidence, confidence, rect.x1,rect.y1,rect.x2 ,rect.y2, vid_classes.code_to_class_string(label), vid_classes.code_to_code_chall(vid_classes), label)
                 current_frame.append_labeled_rect(current_rect)
                 
                 trackID=trackID+1

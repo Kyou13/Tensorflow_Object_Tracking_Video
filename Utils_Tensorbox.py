@@ -67,7 +67,7 @@ def NMS(rects,overlapThresh=0.3):
         x2.append(rect.x2)
         y1.append(rect.y1)
         y2.append(rect.y2)
-        conf.append(rect.true_confidence)
+        conf.append(rect.confidence)
    #     f.write(str(rect.x1)+" "+str(rect.y1)+" "+str(rect.x2)+" "+str(rect.y2)+"\n")
    # f.close()
 
@@ -261,8 +261,8 @@ def get_higher_confidence(rectangles):
 
     for rect in rectangles:
         # print "conf_sil I : " + str(silhouettes_confidence[i])
-        if rect.true_confidence>higher:
-            higher = rect.true_confidence
+        if rect.confidence>higher:
+            higher = rect.confidence
     # print str(index+1),str(higher)
     # print "higher: %.2f"%higher
     higher=higher*10
@@ -329,21 +329,21 @@ def get_multiclass_rectangles(H, confidences, boxes, rnn_len):
     # print "confidences_r" + str(confidences_r.shape)
     # all_rects_r: [r,]のリスト作成 各要素はRectangle_multiclass
     # Rectangle_Multiclass:
-    #   cx, cy, width, height, true_confidence, x1, x2, y1, y2
+    #   cx, cy, width, height, confidence, x1, x2, y1, y2
     all_rects_r = [r for row in all_rects for cell in row for r in cell]
     # confidencesの値によって引く
     min_conf = get_higher_confidence(all_rects_r)
     # 一定のconfidencesを超えるものを代入
-    acc_rects=[rect for rect in all_rects_r if rect.true_confidence>min_conf]
+    acc_rects=[rect for rect in all_rects_r if rect.confidence>min_conf]
     rects = []
     for rect in all_rects_r:
-    	if rect.true_confidence>min_conf:
+    	if rect.confidence>min_conf:
 	        r = al.AnnoRect()
 	        r.x1 = rect.cx - rect.width/2.
 	        r.x2 = rect.cx + rect.width/2.
 	        r.y1 = rect.cy - rect.height/2.
 	        r.y2 = rect.cy + rect.height/2.
-	        r.score = rect.true_confidence
+	        r.score = rect.confidence
                 # label は "Not Set"
 	        r.silhouetteID=rect.label
 	        rects.append(r)
@@ -476,9 +476,9 @@ def bbox_det_TENSORBOX_multiclass(frames_list,path_video_folder,hypes_file,weigh
 
     with tf.Session() as sess:
 
-# 変数を使うので初期化
+        # 変数を使うので初期化
         sess.run(tf.initialize_all_variables())
-# パラメータを読み込み
+        # パラメータを読み込み
         saver.restore(sess, weights_file )##### Restore a Session of the Model to get weights and everything working
     
         #### Starting Evaluating the images

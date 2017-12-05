@@ -147,7 +147,7 @@ def saveVideoResults(filename, annotations):
                 silhouette=rect.label
             if rect.trackID is not -1:
                 trackID=rect.trackID
-            conf = rect.true_confidence
+            conf = rect.confidence
             xmin,ymin,xmax,ymax = rect.x1,rect.y1,rect.x2 ,rect.y2
             file.write(str(frame)+' '+str(silhouette)+' '+str(trackID)+' '+str(conf)+' '+str(xmin)+' '+str(ymin)+' '+str(xmax)+' '+str(ymax) + os.linesep)
     file.close()

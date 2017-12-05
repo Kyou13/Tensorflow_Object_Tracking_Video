@@ -220,8 +220,8 @@ def transform_point(size_img_0, size_img_1, max_size_0, max_size_1, point, xory)
 
 def get_orig_point(size_0_orig, size_1_orig, size_0_trasf, size_1_trasf, point, xory):
     orig_ratio=float(size_0_orig)/float(size_1_orig)
-    print size_0_orig
-    print size_1_orig
+    ## print size_0_orig
+    ## print size_1_orig
     new_ratio=-1
     max_ratio=float(max(float(size_0_orig/size_0_trasf),float(size_1_orig/size_1_trasf),1.0))
     # print 'Size W Img: %d'% size_img_0
