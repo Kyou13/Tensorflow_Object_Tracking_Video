@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: UTF-8 -*- 
 # """
 # Preparing model:
 #  - Install bazel ( check tensorflow's github for more info )

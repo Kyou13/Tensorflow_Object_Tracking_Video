@@ -22,12 +22,24 @@ import Utils_Video
 import progressbar
 import numpy as np
 import time
+from datetime import datetime
 
 # VID_tensorbox
 import Utils_Imagenet
 
 #import Utils_Tensorbox
 # Utils_Tensorboxもここに記載
+
+def convert_to_origin(video_info):
+    
+    width = 1920
+    height = 1080
+    for frame_info in video_info:
+        for rect in frame_info.rects:
+            x1,y1,x2,y2=Utils_Image.get_orig_rect(width, height, 640, 480, rect.x1,rect.y1,rect.x2 ,rect.y2)
+            rect.set_rect_coordinates(x1,x2,y1,y2)
+
+    return video_info
 
 def get_image_dir(args):
     weights_iteration = int(args.weights.split('-')[-1])
@@ -408,7 +420,9 @@ def main():
     parser.add_argument('--tau', default=0.25, type=float)
     parser.add_argument('--min_conf', default=0.2, type=float)
     parser.add_argument('--show_suppressed', default=True, type=bool)
-    parser.add_argument('--path_video', default='12dpm_libx264.mp4', type=str) # add
+    #parser.add_argument('--path_video', default='12dpm_libx264.mp4', type=str) # add
+    parser.add_argument('--output_dir',required=True,type=str)
+    parser.add_argument('--input_dir',required=True,type=str)
     parser.add_argument('--perc',default=100,type=int)
     parser.add_argument('--output_name', default='output.mp4', type=str)
     args = parser.parse_args()
@@ -421,30 +435,36 @@ def main():
     # true_boxes = '%s.gt_%s%s' % (args.weights, expname, os.path.basename(args.test_boxes))
     
     # add
-    path_video_folder = os.path.splitext(os.path.basename(args.path_video))[0]
-    pred_idl = './%s/%s_val.idl' % (path_video_folder, path_video_folder)
-    idl_filename=path_video_folder+'/'+path_video_folder+'.idl'
+    # ファイル名取得
+    #path_video_folder = os.path.splitext(os.path.basename(args.path_video))[0]
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
+        print("Created:{0}".format(args.output_dir))
+    pred_idl = './%s/%s_val.idl' % (args.output_dir, args.output_dir)
+
+    date_now = datetime.now().strftime('%m%d%H%M')
+    idl_filename=args.output_dir+'/'+ args.output_dir+ date_now +'.idl'
     frame_tensorbox = []
     frame_inception = []
-    frame_tensorbox, frame_inception = Utils_Video.extract_frames_incten(args.path_video, args.perc, path_video_folder, idl_filename)
+    frame_tensorbox, frame_inception = Utils_Video.extract_frames_incten(args.input_dir,args.perc,idl_filename)
     progress = progressbar.ProgressBar(widgets=[progressbar.Bar('=', '[', ']'), ' ',progressbar.Percentage(), ' ',progressbar.ETA()])
-    #for image_path in progress(frame_tensorbox):
-    #    Utils_Image.resizeImage(image_path)
-    #Utils_Image.resizeImage(-1)
+
     # add
     video_info=bbox_det_TENSORBOX_multiclass(frame_tensorbox, H, args, pred_idl)
 
     # Trackking
     tracked_video=Utils_Video.recurrent_track_objects(video_info)
-    # tracked_video=utils_video.track_objects(video_info)
-    # labeled_video=Utils_Imagenet.label_video(tracked_video, frame_inception)
-    labeled_video=Utils_Imagenet.recurrent_label_video(tracked_video, frame_inception)
-    # tracked_video=utils_video.track_objects(video_info)
 
-    # tracked_video=utils_video.track_and_label_objects(video_info)
-    labeled_frames=Utils_Video.draw_rectangles(path_video_folder, labeled_video)
-    Utils_Video.make_tracked_video(args.output_name, labeled_frames)
-    frame.saveVideoResults(idl_filename,labeled_video)
+    ## labeled_video=Utils_Imagenet.recurrent_label_video(tracked_video, frame_inception)
+    labeled_video = convert_to_origin(tracked_video)
+
+    labeled_frames=Utils_Video.draw_rectangles(args.output_dir, labeled_video)
+    ##labeled_frames=Utils_Video.draw_rectangles(args.output_dir, tracked_video)
+    output_video = args.output_dir + "/" + args.output_name
+    Utils_Video.make_tracked_video(output_video, labeled_frames)
+    ## import pdb; pdb.set_trace()
+    ##frame.saveVideoResults(idl_filename,labeled_video)
+    frame.saveVideoResults(idl_filename,tracked_video)
 
     # utils_video.make_tracked_video(args.output_name, labeled_video)
     end = time.time()
@@ -455,7 +475,6 @@ def main():
     #pred_annolist, true_annolist = get_results(args, H)
     #pred_annolist.save(pred_boxes)
     #true_annolist.save(true_boxes)
-
     
     #try:
     #    rpc_cmd = './utils/annolist/doRPC.py --minOverlap %f %s %s' % (args.iou_threshold, true_boxes, pred_boxes)

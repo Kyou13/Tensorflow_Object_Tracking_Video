@@ -11,45 +11,51 @@ import multiclass_rectangle
 import vid_classes
 from PIL import Image,ImageDraw
 import sys
+import re
 
 ### Fucntions to mount the video from frames
 
 def draw_rectangles(path_video_folder, labeled_video_frames):
 
+    # width = 1080
+    # height = 1920
+
     labeled_frames =[]
     folder_path=path_video_folder+"/labeled_frames/"
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
-        print("Created Folder: %s"%folder_path)
+        print("created folder: %s"%folder_path)
     for frame in labeled_video_frames:
-        #bb_img = Image.open(frame.filename)
+        #bb_img = image.open(frame.filename)
         dr = cv2.imread(frame.filename)
 
         new_img = folder_path + os.path.splitext(os.path.basename(frame.filename))[0]+ "_labeled" + os.path.splitext(os.path.basename(frame.filename))[1]
-        print "Original filename:%s"%frame.filename
-        print "New filename:%s"%new_img
+        print "original filename:%s"%frame.filename
+        print "new filename:%s"%new_img
         for bb_rect in frame.rects:
-        ################ Adding Rectangle ###################
-            ## dr = ImageDraw.Draw(bb_img)
+        ################ adding rectangle ###################
+            ## dr = imagedraw.draw(bb_img)
             ## cor = (bb_rect.x1,bb_rect.y1,bb_rect.x2 ,bb_rect.y2) # DA VERIFICARE Try_2 (x1,y1, x2,y2) cor = (bb_rect.left() ,bb_rect.right(),bb_rect.bottom(),bb_rect.top()) Try_1
-            ## ## Fixed IDごとに色分け
+            ## ## fixed idごとに色分け
             ## ## if bb_rect.label_code is 'Not Set':
             ## ##     outline_class=(240,255,240)
             ## ## else :  
             ## ##     outline_class=vid_classes.code_to_color(bb_rect.label_chall)
-            ## if bb_rect.trackID is -1:
+            ## if bb_rect.trackid is -1:
             ##     outline_class=(240,255,240)
             ## else :  
             ##     outline_class=vid_classes.code_to_color(bb_rect.trackID)
 
             ## dr.rectangle(cor, outline=outline_class)
 
+            #bb_rect.x1,bb_rect.y1,bb_rect.x2,bb_rect.y2=Utils_Image.get_orig_rect(width, height, 640, 480, bb_rect.x1,bb_rect.y1,bb_rect.x2 ,bb_rect.y2)
+
             top_left = (int(bb_rect.x1),int(bb_rect.y1)) # DA VERIFICARE Try_2 (x1,y1, x2,y2) cor = (bb_rect.left() ,bb_rect.right(),bb_rect.bottom(),bb_rect.top()) Try_1
             under_right = (int(bb_rect.x2) ,int(bb_rect.y2))
 
-            if bb_rect.trackID is 100:
-                outline_class=(240,255,240)
-                # Add
+            if bb_rect.trackID is 10000:
+                #outline_class=(240,255,240)
+                # add
                 continue
             else :  
                 outline_class=vid_classes.code_to_color(bb_rect.trackID)
@@ -63,9 +69,9 @@ def draw_rectangles(path_video_folder, labeled_video_frames):
 
 def draw_rectangle(image_path, rect_box):
 
-    bb_img = Image.open(image_path)
-    ################ Adding Rectangle ###################
-    dr = ImageDraw.Draw(bb_img)
+    bb_img = image.open(image_path)
+    ################ adding rectangle ###################
+    dr = imagedraw.draw(bb_img)
     cor = (rect_box[0],rect_box[1],rect_box[2],rect_box[3]) # DA VERIFICARE Try_2 (x1,y1, x2,y2) cor = (bb_rect.left() ,bb_rect.right(),bb_rect.bottom(),bb_rect.top()) Try_1
     outline_class=(240,255,240)
     dr.rectangle(cor, outline=outline_class)
@@ -78,9 +84,9 @@ def make_tracked_video(out_vid_path, labeled_video_frames):
     if labeled_video_frames[0] is not None:
 
         img = cv2.imread(labeled_video_frames[0], True)
-        print "Reading Filename: %s"%labeled_video_frames[0]
+        print "reading filename: %s"%labeled_video_frames[0]
         h, w = img.shape[:2]
-        print "Video Size: width: %d height: %d"%(h, w)
+        print "video size: width: %d height: %d"%(h, w)
         #fourcc = cv2.cv.CV_FOURCC('m', 'p', '4', 'v')
         fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
         out = cv2.VideoWriter(out_vid_path,fourcc, 20.0, (w, h), True)
@@ -169,19 +175,20 @@ def extract_idl_from_frames(vid_path, video_perc, path_video_folder, folder_path
     print("Finish Reading File Video:%s " % vid_path)
     return list
 
-def extract_frames_incten(vid_path, video_perc, path_video_folder, idl_filename):
+#def extract_frames_incten(vid_path, video_perc, path_video_folder, idl_filename):
+def extract_frames_incten(input_dir,video_perc, idl_filename):
     
     ####### Creating Folder for the video frames and the idl file for the list
     
-    if not os.path.exists(path_video_folder):
-        os.makedirs(path_video_folder)
-        print("Created Folder: %s"%path_video_folder)
-    if not os.path.exists(path_video_folder+'/frames_tensorbox/'):
-        os.makedirs(path_video_folder+'/frames_tensorbox/')
-        print("Created Folder: %s"% (path_video_folder+'/frames_tensorbox/'))
-    if not os.path.exists(path_video_folder+'/frames_inception/'):
-        os.makedirs(path_video_folder+'/frames_inception/')
-        print("Created Folder: %s"% (path_video_folder+'/frames_inception/'))
+    ## if not os.path.exists(path_video_folder):
+    ##     os.makedirs(path_video_folder)
+    ##     print("Created Folder: %s"%path_video_folder)
+    ## if not os.path.exists(path_video_folder+'/frames_tensorbox/'):
+    ##     os.makedirs(path_video_folder+'/frames_tensorbox/')
+    ##     print("Created Folder: %s"% (path_video_folder+'/frames_tensorbox/'))
+    ## if not os.path.exists(path_video_folder+'/frames_inception/'):
+    ##     os.makedirs(path_video_folder+'/frames_inception/')
+    ##     print("Created Folder: %s"% (path_video_folder+'/frames_inception/'))
     if not os.path.exists(idl_filename):
         open(idl_filename, 'a')
         print "Created File: "+ idl_filename
@@ -190,32 +197,44 @@ def extract_frames_incten(vid_path, video_perc, path_video_folder, idl_filename)
     list_inception=[]
     # Opening & Reading the Video
 
-    print("Opening File Video:%s " % vid_path)
-    vidcap = cv2.VideoCapture(vid_path)
-    if not vidcap.isOpened():
-        print "could Not Open :",vid_path
-        return
-    print("Opened File Video:%s " % vid_path)
-    print("Start Reading File Video:%s " % vid_path)
+    ## print("Opening File Video:%s " % vid_path)
+    ## vidcap = cv2.VideoCapture(vid_path)
+    ## if not vidcap.isOpened():
+    ##     print "could Not Open :",vid_path
+    ##     return
+    ## print("Opened File Video:%s " % vid_path)
+    ## print("Start Reading File Video:%s " % vid_path)
     
     # total = int((vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)/100)*video_perc)
     # Fixed
-    #total = int((vidcap.get(7)/100)*video_perc)
-    total = int((vidcap.get(7)/100)*video_perc)
+    # 枚数数える
+    image_dir = os.getcwd()# カレントディレクトリのパスを取得
+    image_dir = image_dir + "/" + input_dir +"/frames_tensorbox"
+     
+    files = os.listdir(image_dir)# ファイルのリストを取得
+    count = 0# カウンタの初期化
+    for file in files:# ファイルの数だけループ
+        index = re.search('.jpg', file)# 拡張子がjpgのものを検出
+        if index:# jpgの時だけ（今回の場合は）カウンタをカウントアップ
+            count = count + 1
+     
+    print(count)# ファイル数の表示
+
+    total = int((count/100)*video_perc)
     
     print("%d Frames to Read"%total)
     progress = progressbar.ProgressBar(widgets=[progressbar.Bar('=', '[', ']'), ' ',progressbar.Percentage(), ' ',progressbar.ETA()])
-    image = vidcap.read()
+    #image = vidcap.read()
     with open(idl_filename, 'w') as f:
         for i in progress(range(1,total+1)):
             #frame_name="%s/%s/fram%d.jpeg"%(path_video_folder,folder_path_frames,i)
-            list_tensorbox.append("%s/%s00000%d.jpg"%(path_video_folder,"frames_tensorbox/",i))
+            list_tensorbox.append("%s/%s%06d.jpg"%(input_dir,"frames_tensorbox/",i))
             #cv2.imwrite("%s/%sframe%d.jpeg"%(path_video_folder,"frames_tensorbox/",i), image[1])     # save frame as JPEG file
-            list_inception.append("%s/%s00000%d.jpg"%(path_video_folder,"frames_inception/",i))
+            list_inception.append("%s/%s%06d.jpg"%(input_dir,"frames_inception/",i))
             #cv2.imwrite("%s/%sframe%d.jpeg"%(path_video_folder,"frames_inception/",i), image[1])     # save frame as JPEG file
-            image = vidcap.read()
+            #image = vidcap.read()
 
-    print("Finish Reading File Video:%s " % vid_path)
+    #print("Finish Reading File Video:%s " % vid_path)
     return list_tensorbox, list_inception
 
 
@@ -234,7 +253,7 @@ def recurrent_track_objects(video_info):
     # Add
     trackID=1
     #Add
-    tmp_trackID = 100
+    tmp_trackID = 10000
 
 # フレームごとの処理
     for frame_info in video_info:
@@ -309,7 +328,7 @@ def recurrent_track_objects(video_info):
                         print("previous_rect:" + str(rect.x1) + ',' +str(rect.y1) + ','+str(rect.x2) + ',' +str(rect.y2) + '\n')
                         # 枠外に行ったら消す      
                         if current_rect.x1 < 0 or current_rect.y1 < 0 or current_rect.x2 < 0 or current_rect.y2 < 0 :
-                            current_rect.load_trackID(100)
+                            current_rect.load_trackID(10000)
 
                         deltas_frame.append((dx1,dx2,dy1,dy2))
                     else: break
@@ -353,6 +372,22 @@ def recurrent_track_objects(video_info):
                         current_rect.load_trackID(rect.trackID)
                         current_frame.append_labeled_rect(current_rect)
                     else: break
+                
+                ## # add 
+                ## # 新たに出現した人を検出
+                ## tmp_trackID = trackID
+                ## # この時点ではtmp_trackIDは使われてないIDの先頭
+
+                ## print("tmp_trackID:{0}".format(tmp_trackID))
+                ## # コピー
+                ## current_rect = frame_info.rects[-1].duplicate()
+                ## # rectにidを与える
+                ## current_rect.load_trackID(trackID)
+                ## # current_rectを追加
+                ## current_frame.append_labeled_rect(current_rect)
+                ## trackID=trackID+1
+                ## print("new_trackID:{0}".format(trackID))
+
             deltas_video.append(deltas_frame)
         # 1フレーム目    
         else:

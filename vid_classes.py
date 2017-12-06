@@ -208,7 +208,8 @@ def code_to_color(argument):
                     29:(139,0,0),
                     30:(240,128,128) 
                       }
-    return switcher.get(argument,(0,0,0) )
+    #return switcher.get(argument,(0,0,0) )
+    return switcher.get(argument,(240,255,240) )
 
 def label_to_color(argument):
     switcher = {
