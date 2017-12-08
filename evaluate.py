@@ -23,6 +23,7 @@ import progressbar
 import numpy as np
 import time
 from datetime import datetime
+import pickle
 
 # VID_tensorbox
 import Utils_Imagenet
@@ -31,16 +32,15 @@ import Utils_Imagenet
 # Utils_Tensorboxもここに記載
 
 # Image除いた代わりに必要
-def convert_to_origin(video_info):
+def convert_to_origin(video_info, args):
     
-    width = 1920
-    height = 1080
     for frame_info in video_info:
         for rect in frame_info.rects:
-            x1,y1,x2,y2=Utils_Image.get_orig_rect(width, height, 640, 480, rect.x1,rect.y1,rect.x2 ,rect.y2)
+            x1,y1,x2,y2=Utils_Image.get_orig_rect(args.width, args.height, 640, 480, rect.x1,rect.y1,rect.x2 ,rect.y2)
             rect.set_rect_coordinates(x1,x2,y1,y2)
 
     return video_info
+
 
 def get_image_dir(args):
     weights_iteration = int(args.weights.split('-')[-1])
@@ -426,6 +426,9 @@ def main():
     parser.add_argument('--input_dir',required=True,type=str)
     parser.add_argument('--perc',default=100,type=int)
     parser.add_argument('--output_name', default='output.mp4', type=str)
+    parser.add_argument('--width', default=640,type=int)
+    parser.add_argument('--height', default=480,type=int)
+    parser.add_argument('--det_pickle',type=str)
     args = parser.parse_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
     hypes_file = '%s/hypes.json' % os.path.dirname(args.weights)
@@ -451,21 +454,51 @@ def main():
     progress = progressbar.ProgressBar(widgets=[progressbar.Bar('=', '[', ']'), ' ',progressbar.Percentage(), ' ',progressbar.ETA()])
 
     # add
-    video_info=bbox_det_TENSORBOX_multiclass(frame_tensorbox, H, args, pred_idl)
+    #import pdb; pdb.set_trace();
+
+    ## 検出データ保存するとき以下3行有効に
+    #video_info=bbox_det_TENSORBOX_multiclass(frame_tensorbox, H, args, pred_idl)
+    #f = open(args.det_pickle,'w')
+    #pickle.dump(video_info,f)
+    #f.close()
+    #import pdb; pdb.set_trace()
+
+    ## 検出データ読み込み
+    f = open(args.det_pickle)
+    video_info = pickle.load(f)
+    ## 検出画像が必要なときは以下3行有効に
+    ## draw_rectanglesも修正必要
+    
+    #labeled_video = convert_to_origin(video_info,args)
+    #labeled=Utils_Video.draw_rectangles(args.output_dir, labeled_video,True)
+    #import pdb; pdb.set_trace()
+
+    frame_count = 0
+    for frame_ in video_info:
+        frame_count += int(len(frame_.rects))
 
     # Trackking
     tracked_video=Utils_Video.recurrent_track_objects(video_info)
+    # この時点でvideo_infoのrects総数は0にならないとおかしい
+    tracked_count = 0
+    for frame_ in tracked_video:
+        tracked_count += int(len(frame_.rects))
+
+    print(frame_count)
+    print(tracked_count)
 
     ## labeled_video=Utils_Imagenet.recurrent_label_video(tracked_video, frame_inception)
-    labeled_video = convert_to_origin(tracked_video)
+    #labeled_video = convert_to_origin(tracked_video,args)
+    convert_to_origin(tracked_video,args)
 
-    labeled_frames=Utils_Video.draw_rectangles(args.output_dir, labeled_video)
-    ##labeled_frames=Utils_Video.draw_rectangles(args.output_dir, tracked_video)
+    #labeled_frames=Utils_Video.draw_rectangles(args.output_dir, labeled_video,False)
+    labeled_frames=Utils_Video.draw_rectangles(args.output_dir, tracked_video, False)
     output_video = args.output_dir + "/" + args.output_name
     Utils_Video.make_tracked_video(output_video, labeled_frames)
     ## import pdb; pdb.set_trace()
-    frame.saveVideoResults(idl_filename,labeled_video)
-    ##frame.saveVideoResults(idl_filename,tracked_video)
+    #frame.saveVideoResults(idl_filename,labeled_video)
+    import pdb; pdb.set_trace()
+    frame.saveVideoResults(idl_filename,tracked_video)
     # 多分こっちでもいい
 
     # utils_video.make_tracked_video(args.output_name, labeled_video)
@@ -491,6 +524,7 @@ def main():
     #    print('output results at: %s' % plot_output)
     #except Exception as e:
     #    print(e)
+    f.close()
 
 if __name__ == '__main__':
     main()

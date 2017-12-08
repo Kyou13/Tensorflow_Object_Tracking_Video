@@ -37,6 +37,8 @@ def draw_rectangles(path_video_folder, labeled_video_frames, flag):
         new_img = folder_path + os.path.splitext(os.path.basename(frame.filename))[0]+ "_labeled" + os.path.splitext(os.path.basename(frame.filename))[1]
         print "original filename:%s"%frame.filename
         print "new filename:%s"%new_img
+        i = 0
+        j = 0
         for bb_rect in frame.rects:
         ################ adding rectangle ###################
             ## dr = imagedraw.draw(bb_img)
@@ -55,20 +57,29 @@ def draw_rectangles(path_video_folder, labeled_video_frames, flag):
 
             #bb_rect.x1,bb_rect.y1,bb_rect.x2,bb_rect.y2=Utils_Image.get_orig_rect(width, height, 640, 480, bb_rect.x1,bb_rect.y1,bb_rect.x2 ,bb_rect.y2)
 
-            top_left = (int(bb_rect.x1),int(bb_rect.y1)) # DA VERIFICARE Try_2 (x1,y1, x2,y2) cor = (bb_rect.left() ,bb_rect.right(),bb_rect.bottom(),bb_rect.top()) Try_1
-            under_right = (int(bb_rect.x2) ,int(bb_rect.y2))
 
-            if bb_rect.trackID is -1:
+            if bb_rect.trackID == -1:
                 #outline_class=(240,255,240)
                 # add
+                j += 1
                 continue
             else :  
+                top_left = (int(bb_rect.x1),int(bb_rect.y1)) # DA VERIFICARE Try_2 (x1,y1, x2,y2) cor = (bb_rect.left() ,bb_rect.right(),bb_rect.bottom(),bb_rect.top()) Try_1
+                under_right = (int(bb_rect.x2) ,int(bb_rect.y2))
+
                 outline_class=vid_classes.code_to_color(bb_rect.trackID)
 
-            dr = cv2.rectangle(dr, top_left, under_right, outline_class, 4, 4)
+                cv2.rectangle(dr, top_left, under_right, outline_class, 4, 4)
+
+                i+=1
+                
             #dr = cv2.rectangle(dr, top_left, under_right, (240,255,240), 4, 4)
         # print save_img  
         # change
+        print(frame.filename)
+        print(len(frame.rects))
+        print(i)
+        print(j)
         cv2.imwrite(new_img, dr)
         labeled_frames.append(new_img)
     return labeled_frames
@@ -271,8 +282,7 @@ def recurrent_track_objects(video_info):
         # 現在のフレームrectsは初期化
         current_frame.rects=[]
         # Add
-        poped_rects = []
-
+        # poped_rects = []
 
         # 2フレーム目以降
         if previous_frame is not None:
@@ -280,7 +290,7 @@ def recurrent_track_objects(video_info):
             ## if frame_info.frame>1:
             if frame_info.frame>0:
                 print "Len Previous Rects Frame: %d"%len(previous_frame.rects)
-                rect_idx=0
+                rect_idx=0 # < tmp_trackID
                     
                 for rect in previous_frame.rects:
                     # Add
@@ -306,12 +316,15 @@ def recurrent_track_objects(video_info):
                     print('curent_rect:'+str(len(current_frame.rects)))
                     # previousのrectに差分タス
                     # (dx1,dx2,dy1,dy2)
+                    ## rectそのまま書き換えるのはダメか
+                    ## 後で考える
                     rect.add_delta(deltas_video[frame_info.frame-2][rect_idx][0],deltas_video[frame_info.frame-2][rect_idx][1],deltas_video[frame_info.frame-2][rect_idx][2],deltas_video[frame_info.frame-2][rect_idx][3])
 
-                    print(str(rect_idx) + ' ' + str(deltas_video[frame_info.frame-2][rect_idx][0]) +',' + str(deltas_video[frame_info.frame-2][rect_idx][1])+','+str(deltas_video[frame_info.frame-2][rect_idx][2]) + ',' + str(deltas_video[frame_info.frame-2][rect_idx][3]))
+                    #print(str(rect_idx) + ' ' + str(deltas_video[frame_info.frame-2][rect_idx][0]) +',' + str(deltas_video[frame_info.frame-2][rect_idx][1])+','+str(deltas_video[frame_info.frame-2][rect_idx][2]) + ',' + str(deltas_video[frame_info.frame-2][rect_idx][3]))
+
                     # max_iou rect
                     current_rect = multiclass_rectangle.pop_max_iou(frame_info.rects,rect)
-                    poped_rects.append(current_rect)
+                    #poped_rects.append(current_rect)
                     print("AAAframe_info.rects:{0}".format(len(frame_info.rects)))
 
                     if current_rect is not None:
@@ -322,6 +335,9 @@ def recurrent_track_objects(video_info):
                         # current rectを描写し,current_rectの値を更新
                         # print(str(frame_info.filename)) # 12dpm_libx264/frames_tensorbox/frame~~
                         # 上記画像に一色で描写
+
+                        ## ここ考える
+                        ## 1,2つ前dx,dyに1.2かけたものより、1つ前と現在の移動距離のほうが大きかったら、一つ前の座標に1つ前と現在の差を足して現在の座標を更新
                         current_rect.check_rects_motion(frame_info.filename, rect, deltas_video[frame_info.frame-2][rect_idx][0],deltas_video[frame_info.frame-2][rect_idx][1],deltas_video[frame_info.frame-2][rect_idx][2],deltas_video[frame_info.frame-2][rect_idx][3])
                         # current_rectをcurrent_frameのrectsに追加
                         current_frame.append_labeled_rect(current_rect)
@@ -354,7 +370,9 @@ def recurrent_track_objects(video_info):
                 print("tmp_trackID:{0}".format(tmp_trackID))
                 # rect: Rectangle_Multiclass Object
                 # bboxにIDを付加
-                for rect in picked_rects :       
+                # for rect in picked_rects :       
+                # この時点でrectsはpopされている
+                for rect in frame_info.rects :       
                     # コピー
                     current_rect = rect.duplicate()
                     # rectにidを与える
@@ -362,6 +380,7 @@ def recurrent_track_objects(video_info):
                     # current_rectを追加
                     current_frame.append_labeled_rect(current_rect)
                     trackID=trackID+1
+                    print "HEEEEE"
                 print("new_trackID:{0}".format(trackID))
                 # 次のループのCurrent Frame objとnew_trackID-1は同じ
 

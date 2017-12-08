@@ -126,12 +126,12 @@ class Frame_Info(object):
 
 ### Save frames array function to .idl
 
-def saveVideoResults(filename, annotations):
+def saveVideoResults(filename, video_frames):
     if not os.path.exists(filename):
         print "Created File: "+ filename
     file = open(filename, 'w')
-    for annotation in annotations:
-        frame = -1
+    for video_info in video_frames:
+        _frame = -1
         trackID=-1
         conf=0
         silhouette=-1
@@ -139,15 +139,15 @@ def saveVideoResults(filename, annotations):
 
         detections_array=[]
 
-        if annotation.frame is not -1:
-            frame=annotation.frame
-        for rect in annotation.rects:
+        if video_info.frame is not -1:
+            _frame=video_info.frame
+        for rect in video_info.rects:
             #if vid_classes.class_string_to_comp_code(rect.label) is not 'nothing':
-            if vid_classes.class_string_to_comp_code(rect.label) is not None:
-                silhouette=rect.label
-            if rect.trackID is not -1:
-                trackID=rect.trackID
+            #if vid_classes.class_string_to_comp_code(rect.label) is not None:
+            #    silhouette=rect.label
+            #if rect.trackID is not -1:
+            trackID=rect.trackID
             conf = rect.confidence
             xmin,ymin,xmax,ymax = rect.x1,rect.y1,rect.x2 ,rect.y2
-            file.write(str(frame)+' '+str(silhouette)+' '+str(trackID)+' '+str(conf)+' '+str(xmin)+' '+str(ymin)+' '+str(xmax)+' '+str(ymax) + os.linesep)
+            file.write(str(_frame)+' '+str(trackID)+' '+str(conf)+' '+str(xmin)+' '+str(ymin)+' '+str(xmax)+' '+str(ymax) + os.linesep)
     file.close()
