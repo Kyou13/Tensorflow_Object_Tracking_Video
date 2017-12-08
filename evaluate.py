@@ -30,6 +30,7 @@ import Utils_Imagenet
 #import Utils_Tensorbox
 # Utils_Tensorboxもここに記載
 
+# Image除いた代わりに必要
 def convert_to_origin(video_info):
     
     width = 1920
@@ -463,8 +464,9 @@ def main():
     output_video = args.output_dir + "/" + args.output_name
     Utils_Video.make_tracked_video(output_video, labeled_frames)
     ## import pdb; pdb.set_trace()
-    ##frame.saveVideoResults(idl_filename,labeled_video)
-    frame.saveVideoResults(idl_filename,tracked_video)
+    frame.saveVideoResults(idl_filename,labeled_video)
+    ##frame.saveVideoResults(idl_filename,tracked_video)
+    # 多分こっちでもいい
 
     # utils_video.make_tracked_video(args.output_name, labeled_video)
     end = time.time()

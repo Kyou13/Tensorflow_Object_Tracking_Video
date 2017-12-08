@@ -15,13 +15,18 @@ import re
 
 ### Fucntions to mount the video from frames
 
-def draw_rectangles(path_video_folder, labeled_video_frames):
+def draw_rectangles(path_video_folder, labeled_video_frames, flag):
 
     # width = 1080
     # height = 1920
 
     labeled_frames =[]
-    folder_path=path_video_folder+"/labeled_frames/"
+    if flag:
+        folder_path=path_video_folder+"/deted_frames/"
+
+    else:
+        folder_path=path_video_folder+"/labeled_frames/"
+    
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
         print("created folder: %s"%folder_path)
@@ -53,7 +58,7 @@ def draw_rectangles(path_video_folder, labeled_video_frames):
             top_left = (int(bb_rect.x1),int(bb_rect.y1)) # DA VERIFICARE Try_2 (x1,y1, x2,y2) cor = (bb_rect.left() ,bb_rect.right(),bb_rect.bottom(),bb_rect.top()) Try_1
             under_right = (int(bb_rect.x2) ,int(bb_rect.y2))
 
-            if bb_rect.trackID is 10000:
+            if bb_rect.trackID is -1:
                 #outline_class=(240,255,240)
                 # add
                 continue
@@ -61,6 +66,7 @@ def draw_rectangles(path_video_folder, labeled_video_frames):
                 outline_class=vid_classes.code_to_color(bb_rect.trackID)
 
             dr = cv2.rectangle(dr, top_left, under_right, outline_class, 4, 4)
+            #dr = cv2.rectangle(dr, top_left, under_right, (240,255,240), 4, 4)
         # print save_img  
         # change
         cv2.imwrite(new_img, dr)
@@ -253,7 +259,7 @@ def recurrent_track_objects(video_info):
     # Add
     trackID=1
     #Add
-    tmp_trackID = 10000
+    tmp_trackID = -1
 
 # フレームごとの処理
     for frame_info in video_info:
@@ -271,7 +277,8 @@ def recurrent_track_objects(video_info):
         # 2フレーム目以降
         if previous_frame is not None:
             deltas_frame=[]
-            if frame_info.frame>1:
+            ## if frame_info.frame>1:
+            if frame_info.frame>0:
                 print "Len Previous Rects Frame: %d"%len(previous_frame.rects)
                 rect_idx=0
                     
@@ -281,6 +288,7 @@ def recurrent_track_objects(video_info):
                     if rect.trackID >= tmp_trackID :
                     #for rect in previous_frame.rects:
                         print "Before"+str(len(current_frame.rects))
+                        # IOU高いやつ取り出す frame_info.rectsはlen-1
                         current_rect = multiclass_rectangle.pop_max_iou(frame_info.rects,rect)
                         # Add
                         if current_rect is not None:
@@ -328,7 +336,7 @@ def recurrent_track_objects(video_info):
                         print("previous_rect:" + str(rect.x1) + ',' +str(rect.y1) + ','+str(rect.x2) + ',' +str(rect.y2) + '\n')
                         # 枠外に行ったら消す      
                         if current_rect.x1 < 0 or current_rect.y1 < 0 or current_rect.x2 < 0 or current_rect.y2 < 0 :
-                            current_rect.load_trackID(10000)
+                            current_rect.load_trackID(-1)
 
                         deltas_frame.append((dx1,dx2,dy1,dy2))
                     else: break
@@ -336,9 +344,9 @@ def recurrent_track_objects(video_info):
                 
                 # add 
                 # 新たに出現した人を検出
-                picked_rects=Utils_Tensorbox.FixedNMS(frame_info.rects,poped_rects)
-                picked_rects=Utils_Tensorbox.NMS(picked_rects)
-                Utils_Tensorbox.rectsToText(picked_rects,'picked_rects'+str(frame_info.frame))
+                ## picked_rects=Utils_Tensorbox.FixedNMS(frame_info.rects,poped_rects)
+                ## picked_rects=Utils_Tensorbox.NMS(picked_rects)
+                ## Utils_Tensorbox.rectsToText(picked_rects,'picked_rects'+str(frame_info.frame))
                 #print("ADD:frame_info.rects:{0}".format(len(frame_info.rects)))
                 tmp_trackID = trackID
                 # この時点ではtmp_trackIDは使われてないIDの先頭
@@ -358,44 +366,46 @@ def recurrent_track_objects(video_info):
                 # 次のループのCurrent Frame objとnew_trackID-1は同じ
 
             # 2フレーム目        
-            else:
-                print "Len Previous Rects Frame: %d"%len(previous_frame.rects)
-                for rect in previous_frame.rects:
-                    print "A"+str(len(current_frame.rects))
-                    current_rect = multiclass_rectangle.pop_max_iou(frame_info.rects,rect)
-                    if current_rect is not None:
-                        dx1=current_rect.x1-rect.x1
-                        dx2=current_rect.x2-rect.x2
-                        dy1=current_rect.y1-rect.y1
-                        dy2=current_rect.y2-rect.y2
-                        deltas_frame.append((dx1,dx2,dy1,dy2))
-                        current_rect.load_trackID(rect.trackID)
-                        current_frame.append_labeled_rect(current_rect)
-                    else: break
-                
-                ## # add 
-                ## # 新たに出現した人を検出
-                ## tmp_trackID = trackID
-                ## # この時点ではtmp_trackIDは使われてないIDの先頭
+            ## 人数変化する場合は2フレーム目単独の処理は必要なし
+            ##else:
+            ##    print "Len Previous Rects Frame: %d"%len(previous_frame.rects)
+            ##    for rect in previous_frame.rects:
+            ##        print "A"+str(len(current_frame.rects))
+            ##        current_rect = multiclass_rectangle.pop_max_iou(frame_info.rects,rect)
+            ##        if current_rect is not None:
+            ##            dx1=current_rect.x1-rect.x1
+            ##            dx2=current_rect.x2-rect.x2
+            ##            dy1=current_rect.y1-rect.y1
+            ##            dy2=current_rect.y2-rect.y2
+            ##            deltas_frame.append((dx1,dx2,dy1,dy2))
+            ##            current_rect.load_trackID(rect.trackID)
+            ##            current_frame.append_labeled_rect(current_rect)
+            ##        else: break
+            ##    
+            ##    ## # add 
+            ##    ## # 新たに出現した人を検出
+            ##    ## tmp_trackID = trackID
+            ##    ## # この時点ではtmp_trackIDは使われてないIDの先頭
 
-                ## print("tmp_trackID:{0}".format(tmp_trackID))
-                ## # コピー
-                ## current_rect = frame_info.rects[-1].duplicate()
-                ## # rectにidを与える
-                ## current_rect.load_trackID(trackID)
-                ## # current_rectを追加
-                ## current_frame.append_labeled_rect(current_rect)
-                ## trackID=trackID+1
-                ## print("new_trackID:{0}".format(trackID))
+            ##    ## print("tmp_trackID:{0}".format(tmp_trackID))
+            ##    ## # コピー
+            ##    ## current_rect = frame_info.rects[-1].duplicate()
+            ##    ## # rectにidを与える
+            ##    ## current_rect.load_trackID(trackID)
+            ##    ## # current_rectを追加
+            ##    ## current_frame.append_labeled_rect(current_rect)
+            ##    ## trackID=trackID+1
+            ##    ## print("new_trackID:{0}".format(trackID))
 
             deltas_video.append(deltas_frame)
         # 1フレーム目    
         else:
             #trackID=1
-            picked_rect=Utils_Tensorbox.NMS(frame_info.rects)
+            ## picked_rect=Utils_Tensorbox.NMS(frame_info.rects)
             # rect: Rectangle_Multiclass Object
             # bboxにIDを付加
-            for rect in picked_rect:       
+            ##for rect in picked_rect:       
+            for rect in frame_info.rects:       
                 # コピー
                 current_rect = rect.duplicate()
                 # rectにidを与える
@@ -403,6 +413,7 @@ def recurrent_track_objects(video_info):
                 # current_rectを追加
                 current_frame.append_labeled_rect(current_rect)
                 trackID=trackID+1
+
 
         previous_frame=current_frame.duplicate()
         # rectsのみコピー 上のコピーではrectsはコピーしないので
@@ -412,7 +423,6 @@ def recurrent_track_objects(video_info):
         tracked_video.insert(len(tracked_video), current_frame)
 
     return tracked_video
-
 
 def track_objects(video_info):
 
