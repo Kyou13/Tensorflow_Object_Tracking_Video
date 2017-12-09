@@ -234,6 +234,7 @@ def get_higher_confidence(rectangles):
     # print "higher: %.2f"%higher
     higher=higher*10
     # print "higher: %.1f"%higher
+    # 0方向に誤差丸める
     higher=int(higher)
     # print "higher: %.d"%higher
     higher=float(higher)/10.0
@@ -286,8 +287,8 @@ def get_multiclass_rectangles(H, confidences, boxes, rnn_len):
     all_rects_r = [r for row in all_rects for cell in row for r in cell]
     #print("len(all_rects):{0}".format(len(all_rects_r)))
     # confidencesの値によって引く
-    #min_conf = get_higher_confidence(all_rects_r)
-    min_conf = 0.2
+    min_conf = get_higher_confidence(all_rects_r)
+    #min_conf = 0.2
     # 一定のconfidencesを超えるものを代入
     # tensorboxの赤枠にあたるもの？
     # add 2 sentence
@@ -453,15 +454,12 @@ def main():
     frame_tensorbox, frame_inception = Utils_Video.extract_frames_incten(args.input_dir,args.perc,idl_filename)
     progress = progressbar.ProgressBar(widgets=[progressbar.Bar('=', '[', ']'), ' ',progressbar.Percentage(), ' ',progressbar.ETA()])
 
-    # add
-    #import pdb; pdb.set_trace();
-
     ## 検出データ保存するとき以下3行有効に
-    #video_info=bbox_det_TENSORBOX_multiclass(frame_tensorbox, H, args, pred_idl)
-    #f = open(args.det_pickle,'w')
-    #pickle.dump(video_info,f)
-    #f.close()
-    #import pdb; pdb.set_trace()
+    ##video_info=bbox_det_TENSORBOX_multiclass(frame_tensorbox, H, args, pred_idl)
+    ##f = open(args.det_pickle,'w')
+    ##pickle.dump(video_info,f)
+    ##f.close()
+    ##import pdb; pdb.set_trace()
 
     ## 検出データ読み込み
     f = open(args.det_pickle)
@@ -477,12 +475,14 @@ def main():
     for frame_ in video_info:
         frame_count += int(len(frame_.rects))
 
+# 座標がrecurrent_track_objectsの前後で変わっちゃう
     # Trackking
     tracked_video=Utils_Video.recurrent_track_objects(video_info)
     # この時点でvideo_infoのrects総数は0にならないとおかしい
     tracked_count = 0
     for frame_ in tracked_video:
         tracked_count += int(len(frame_.rects))
+
 
     print(frame_count)
     print(tracked_count)
@@ -497,7 +497,6 @@ def main():
     Utils_Video.make_tracked_video(output_video, labeled_frames)
     ## import pdb; pdb.set_trace()
     #frame.saveVideoResults(idl_filename,labeled_video)
-    import pdb; pdb.set_trace()
     frame.saveVideoResults(idl_filename,tracked_video)
     # 多分こっちでもいい
 

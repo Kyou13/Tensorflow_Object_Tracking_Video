@@ -140,7 +140,8 @@ def saveVideoResults(filename, video_frames):
         detections_array=[]
 
         if video_info.frame is not -1:
-            _frame=video_info.frame
+            _frame=video_info.frame + 1
+            
         for rect in video_info.rects:
             #if vid_classes.class_string_to_comp_code(rect.label) is not 'nothing':
             #if vid_classes.class_string_to_comp_code(rect.label) is not None:

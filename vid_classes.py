@@ -1,4 +1,40 @@
 ####DEFINE COLOR SWITCH
+import math
+
+def randam_color_generate(splitSize, index):
+    interval = 360.0 / splitSize
+    hue = (index * interval)
+    sat = 1.0
+    val = 1.0
+
+    hi = math.floor(hue / 60.0) % 6
+    f = (hue / 60.0) - hi
+    p = val * (1.0 - sat)
+    q = val * (1.0 - sat * f)
+    t = val * (1.0 - sat * (1.0 - f))
+    
+    val = round(val * 255)
+    p = round(p * 255)
+    t = round(t * 255)
+    q = round(q * 255)
+
+    if hi == 0:
+        # RGB
+        return (val, t, p)
+    elif hi == 1:
+        return (q, val, p)
+    elif hi == 2:
+        return (p, val, t)
+    elif hi == 3:
+        return (p, q, val)
+    elif hi == 4:
+        return (t, p, val)
+    elif hi == 5:
+        return (val, p, q)
+    else:
+        print("unexpected error")
+
+
 
 def code_to_class_string(argument):
     switcher = {
@@ -206,7 +242,17 @@ def code_to_color(argument):
                     27:(184,134,11),
                     28:(218,165,32),
                     29:(139,0,0),
-                    30:(240,128,128) 
+                    30:(240,128,128), 
+                    31:(0,128,64),
+                    32:(100,139,87),
+                    33:(34,20,34),
+                    34:(255,69,50),
+                    35:(128,140,0),
+                    36:(255,90,0),
+                    37:(120,134,11),
+                    38:(1,165,32),
+                    39:(139,33,0),
+                    40:(139,0,40)
                       }
     #return switcher.get(argument,(0,0,0) )
     return switcher.get(argument,(240,255,240) )

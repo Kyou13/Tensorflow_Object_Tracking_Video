@@ -122,6 +122,7 @@ class Rectangle_Multiclass(object):
 
     def check_rects_motion(self,filename, rect, dx1, dx2, dy1,dy2, error=1.2, attenuation=1.1):
         ## Rect is considered passed befor through add_delta
+        ## rectは推定される現在の位置
         if((self.x1-rect.x1)>dx1*error)| ((self.y1-rect.y1)>dy1*error)|((self.x2-rect.x2)>dx2*error)|((self.y2-rect.y2)>dy2*error):
             # 矩形を記述
             #Utils_Video.draw_rectangle(filename,(self.x1, self.y1,self.x2, self.y2))
