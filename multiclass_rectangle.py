@@ -253,12 +253,23 @@ def duplicate_rects(rects):
         new_rect.y2 = copy.copy(rect.y2)
         new_rects.append(new_rect)
     return new_rects
+
+def confirm_search_area(current_rect, before_rect, wariai):
+
+    x_area =  before_rect.width * wariai 
+    y_area =  before_rect.height * wariai 
+    if current_rect.x2 < (before_rect.x1 - x_area) or current_rect.x1 > (before_rect.x2 + x_area) or current_rect.y1 > (before_rect.y2 + y_area) or current_rect.y2 < (before_rect.y1 - y_area):
+        return False
+    else :
+        return True
+
 # 返り値:max_iouな現在フレームのrect
 # (current, previous)
 def pop_max_iou(rects, rect):
     max_iou=None
     max_id=0
     rect_id=0
+    wariai = 0.5 # width or height * wariai の範囲で探索を行う
     # previous , corrent frameでmax_iouを計算
     # 軸はprevious
     for rectangle in rects:
@@ -272,9 +283,21 @@ def pop_max_iou(rects, rect):
             max_iou=rect.iou(rectangle)
             max_id=rect_id
         rect_id=rect_id+1
+        # if confirm_search_area(rectangle,rect, wariai):
+        #     if max_iou is None:
+        #         max_iou=rect.iou(rectangle)
+        #         # rect_id = 0
+        #         max_id=rect_id
+        #         
+        #     if rect.iou(rectangle)>max_iou:
+        #         max_iou=rect.iou(rectangle)
+        #         max_id=rect_id
+        #     rect_id=rect_id+1
+        # else:
+        #     continue
         # 以下のif必要？
         # max_iou = 0だったら
-    if max_iou == 0:
+    if max_iou == 0 :
         return None
     if len(rects)>max_id:
         # max_iouなrectを代入

@@ -38,6 +38,8 @@ def draw_rectangles(path_video_folder, labeled_video_frames, flag):
                 maxID = bb_rect.trackID
 
     color_dict = {}
+    fontsize = 1
+    font = cv2.FONT_HERSHEY_PLAIN
     
             
     for frame in labeled_video_frames:
@@ -82,6 +84,9 @@ def draw_rectangles(path_video_folder, labeled_video_frames, flag):
                 outline_class=vid_classes.randam_color_generate_2(color_dict, bb_rect.trackID)
 
                 cv2.rectangle(dr, top_left, under_right, outline_class, 4, 4)
+                text = str(bb_rect.trackID)
+                
+                cv2.putText(dr,text,(int(bb_rect.cx),int(bb_rect.cy -4 - bb_rect.height/2)),font, fontsize,outline_class)
 
                 i+=1
 
@@ -273,7 +278,7 @@ def extract_frames_incten(input_dir,video_perc, idl_filename):
 
 ### Function to track objects and spread informations between frames
 
-def recurrent_track_objects(video_info):
+def recurrent_track_objects(video_info, args):
 
     previous_frame= None
     previous_num_obj=-1
@@ -309,6 +314,7 @@ def recurrent_track_objects(video_info):
             if frame_info.frame>0:
                 print "Len Previous Rects Frame: %d"%len(previous_frame.rects)
                 rect_idx=0 # < tmp_trackID
+                count = 0
                     
                 for rect in previous_frame.rects:
                     # Add
@@ -316,12 +322,13 @@ def recurrent_track_objects(video_info):
                     if len(frame_info.rects) == 0 : 
                         break
                     #if rect.trackID >= tmp_trackID and now_frame_len > len(current_frame.rects) :
+                    if frame_info.frame == 5:
+                        import pdb; pdb.set_trace()
                     if rect.trackID >= tmp_trackID :
                     #for rect in previous_frame.rects:
                         print "Before"+str(len(current_frame.rects))
                         # IOU高いやつ取り出す frame_info.rectsはlen-1
                         current_rect = multiclass_rectangle.pop_max_iou(frame_info.rects,rect)
-                        current_rect
                         # Add
                         if current_rect is not None:
                             dx1=current_rect.x1-rect.x1
@@ -331,7 +338,10 @@ def recurrent_track_objects(video_info):
                             deltas_frame.append((dx1,dx2,dy1,dy2))
                             current_rect.load_trackID(rect.trackID)
                             current_frame.append_labeled_rect(current_rect)
-                        else: break
+                            count += 1
+      #                      if dx1 == -3:
+      #                          import pdb; pdb.set_trace()
+                        #else: 
                         #deltas_frame.append((dx1,dx2,dy1,dy2))
                         continue
 
@@ -344,7 +354,8 @@ def recurrent_track_objects(video_info):
                     pred_rect = rect.duplicate()
                     pred_rect.add_delta(deltas_video[frame_info.frame-2][rect_idx][0],deltas_video[frame_info.frame-2][rect_idx][1],deltas_video[frame_info.frame-2][rect_idx][2],deltas_video[frame_info.frame-2][rect_idx][3])
 
-                    if pred_rect.x1 < 0 or pred_rect.y1 < 0 or pred_rect.x2 < 0 or pred_rect.y2 < 0 :
+                    #if pred_rect.x1 < 0 or pred_rect.y1 < 0 or pred_rect.x2 < 0 or pred_rect.y2 < 0 :
+                    if pred_rect.x2 < 0 or pred_rect.y2 < 0 or pred_rect.x1 > args.width or pred_rect.y2 > args.height :
                         rect_idx += 1
                         continue
 
@@ -372,7 +383,6 @@ def recurrent_track_objects(video_info):
                         dy1=current_rect.y1-rect.y1
                         dy2=current_rect.y2-rect.y2
 
-                        #print("x1,y1,x2,y2")
                         print("trackID:{0}".format(current_rect.trackID))
                         print("current_rect:" + str(current_rect.x1) + ',' +str(current_rect.y1) + ','+str(current_rect.x2) + ',' +str(current_rect.y2))
                         print("previous_rect:" + str(rect.x1) + ',' +str(rect.y1) + ','+str(rect.x2) + ',' +str(rect.y2) + '\n')
@@ -384,6 +394,10 @@ def recurrent_track_objects(video_info):
                         deltas_frame.append((dx1,dx2,dy1,dy2))
                     else: break
                     rect_idx += 1
+                
+            
+ #               import pdb; pdb.set_trace()
+
                 
                 # add 
                 # 新たに出現した人を検出
@@ -410,6 +424,7 @@ def recurrent_track_objects(video_info):
                 print("new_trackID:{0}".format(trackID))
                 # 次のループのCurrent Frame objとnew_trackID-1は同じ
 
+            # previous forのあと
 
             deltas_video.append(deltas_frame)
         # 1フレーム目    

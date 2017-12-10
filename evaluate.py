@@ -37,6 +37,8 @@ def convert_to_origin(video_info, args):
     for frame_info in video_info:
         for rect in frame_info.rects:
             x1,y1,x2,y2=Utils_Image.get_orig_rect(args.width, args.height, 640, 480, rect.x1,rect.y1,rect.x2 ,rect.y2)
+            if rect.x1 == -9.5:
+                import pdb;pdb.set_trace()
             rect.set_rect_coordinates(x1,x2,y1,y2)
 
     return video_info
@@ -477,7 +479,7 @@ def main():
 
 # 座標がrecurrent_track_objectsの前後で変わっちゃう
     # Trackking
-    tracked_video=Utils_Video.recurrent_track_objects(video_info)
+    tracked_video=Utils_Video.recurrent_track_objects(video_info,args)
     # この時点でvideo_infoのrects総数は0にならないとおかしい
     tracked_count = 0
     for frame_ in tracked_video:
@@ -489,7 +491,7 @@ def main():
 
     ## labeled_video=Utils_Imagenet.recurrent_label_video(tracked_video, frame_inception)
     #labeled_video = convert_to_origin(tracked_video,args)
-    convert_to_origin(tracked_video,args)
+    #convert_to_origin(tracked_video,args)
 
     #labeled_frames=Utils_Video.draw_rectangles(args.output_dir, labeled_video,False)
     labeled_frames=Utils_Video.draw_rectangles(args.output_dir, tracked_video, False)
