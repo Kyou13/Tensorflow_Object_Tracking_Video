@@ -5,3 +5,7 @@
 .git/objects/pack/pack-0437c1efa4d10d5bf6c85eee05693de0a7c10ede.pack
 output_mytrain/lstm/0.1_12/save.ckpt-400000.data-00000-of-00001
 output_mytrain/lstm/0.1_12/save.ckpt-200000.data-00000-of-00001
+output_mytrain/lstm/tud/save.ckpt-70000.data-00000-of-00001
+output_mytrain/lstm/tud/save.ckpt-220000.data-00000-of-00001
+output_mytrain/lstm/pets
+PETS2017

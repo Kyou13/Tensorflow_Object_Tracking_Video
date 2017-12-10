@@ -467,9 +467,9 @@ def main():
     ## 検出画像が必要なときは以下3行有効に
     ## draw_rectanglesも修正必要
     
-    #labeled_video = convert_to_origin(video_info,args)
-    #labeled=Utils_Video.draw_rectangles(args.output_dir, labeled_video,True)
-    #import pdb; pdb.set_trace()
+    ##labeled_video = convert_to_origin(video_info,args)
+    ##labeled=Utils_Video.draw_rectangles(args.output_dir, labeled_video,True)
+    ##import pdb; pdb.set_trace()
 
     frame_count = 0
     for frame_ in video_info:

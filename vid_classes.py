@@ -1,5 +1,6 @@
 ####DEFINE COLOR SWITCH
 import math
+import random
 
 def randam_color_generate(splitSize, index):
     interval = 360.0 / splitSize
@@ -33,6 +34,16 @@ def randam_color_generate(splitSize, index):
         return (val, p, q)
     else:
         print("unexpected error")
+
+def randam_color_generate_2(color_dict,id):
+    
+    if id in color_dict:
+        return color_dict[id]
+
+    else:
+        rc = lambda: random.randint(0, 255)
+        color_dict[id] = (rc(),rc(),rc())
+        return color_dict[id]
 
 
 

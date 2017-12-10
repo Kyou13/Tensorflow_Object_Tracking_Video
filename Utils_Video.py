@@ -36,6 +36,8 @@ def draw_rectangles(path_video_folder, labeled_video_frames, flag):
         for bb_rect in frame.rects:
             if bb_rect.trackID > maxID:
                 maxID = bb_rect.trackID
+
+    color_dict = {}
     
             
     for frame in labeled_video_frames:
@@ -75,8 +77,9 @@ def draw_rectangles(path_video_folder, labeled_video_frames, flag):
                 top_left = (int(bb_rect.x1),int(bb_rect.y1)) # DA VERIFICARE Try_2 (x1,y1, x2,y2) cor = (bb_rect.left() ,bb_rect.right(),bb_rect.bottom(),bb_rect.top()) Try_1
                 under_right = (int(bb_rect.x2) ,int(bb_rect.y2))
 
-                outline_class=vid_classes.code_to_color(bb_rect.trackID)
+                #outline_class=vid_classes.code_to_color(bb_rect.trackID)
                 #outline_class=vid_classes.randam_color_generate(maxID, bb_rect.trackID)
+                outline_class=vid_classes.randam_color_generate_2(color_dict, bb_rect.trackID)
 
                 cv2.rectangle(dr, top_left, under_right, outline_class, 4, 4)
 
@@ -297,6 +300,7 @@ def recurrent_track_objects(video_info):
         current_frame.rects=[]
         # Add
         # poped_rects = []
+        now_frame_len = len(frame_info.rects)
 
         # 2フレーム目以降
         if previous_frame is not None:
@@ -309,11 +313,15 @@ def recurrent_track_objects(video_info):
                 for rect in previous_frame.rects:
                     # Add
                     print("TOP::rect.trackID:{0},tmp_trackID:{1}".format(rect.trackID,tmp_trackID))
+                    if len(frame_info.rects) == 0 : 
+                        break
+                    #if rect.trackID >= tmp_trackID and now_frame_len > len(current_frame.rects) :
                     if rect.trackID >= tmp_trackID :
                     #for rect in previous_frame.rects:
                         print "Before"+str(len(current_frame.rects))
                         # IOU高いやつ取り出す frame_info.rectsはlen-1
                         current_rect = multiclass_rectangle.pop_max_iou(frame_info.rects,rect)
+                        current_rect
                         # Add
                         if current_rect is not None:
                             dx1=current_rect.x1-rect.x1
@@ -324,7 +332,7 @@ def recurrent_track_objects(video_info):
                             current_rect.load_trackID(rect.trackID)
                             current_frame.append_labeled_rect(current_rect)
                         else: break
-                        deltas_frame.append((dx1,dx2,dy1,dy2))
+                        #deltas_frame.append((dx1,dx2,dy1,dy2))
                         continue
 
                     print('curent_rect:'+str(len(current_frame.rects)))
@@ -332,10 +340,16 @@ def recurrent_track_objects(video_info):
                     # (dx1,dx2,dy1,dy2)
                     ## rectそのまま書き換えるのはダメか
                     ## 一つ前のrectは書き換えても問題なしか
+                    ## rectは見てる順
                     pred_rect = rect.duplicate()
                     pred_rect.add_delta(deltas_video[frame_info.frame-2][rect_idx][0],deltas_video[frame_info.frame-2][rect_idx][1],deltas_video[frame_info.frame-2][rect_idx][2],deltas_video[frame_info.frame-2][rect_idx][3])
 
+                    if pred_rect.x1 < 0 or pred_rect.y1 < 0 or pred_rect.x2 < 0 or pred_rect.y2 < 0 :
+                        rect_idx += 1
+                        continue
+
                     # max_iou rect
+                    # popするやつ考えないとだめ
                     current_rect = multiclass_rectangle.pop_max_iou(frame_info.rects,pred_rect)
                     #poped_rects.append(current_rect)
 
@@ -364,8 +378,8 @@ def recurrent_track_objects(video_info):
                         print("previous_rect:" + str(rect.x1) + ',' +str(rect.y1) + ','+str(rect.x2) + ',' +str(rect.y2) + '\n')
                         file.write("current_rect:" + str(current_rect.x1) + ',' +str(current_rect.y1) + ','+str(current_rect.x2) + ',' +str(current_rect.y2) + ' ' +"previous_rect:" + str(rect.x1) + ',' +str(rect.y1) + ','+str(rect.x2) + ',' +str(rect.y2) + '\n')
                         # 枠外に行ったら消す      
-                        if current_rect.x1 < 0 or current_rect.y1 < 0 or current_rect.x2 < 0 or current_rect.y2 < 0 :
-                            current_rect.load_trackID(-1)
+                        # if current_rect.x1 < 0 or current_rect.y1 < 0 or current_rect.x2 < 0 or current_rect.y2 < 0 :
+                        #     current_rect.load_trackID(-1)
 
                         deltas_frame.append((dx1,dx2,dy1,dy2))
                     else: break

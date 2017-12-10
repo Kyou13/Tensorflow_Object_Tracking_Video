@@ -260,11 +260,12 @@ def pop_max_iou(rects, rect):
     max_id=0
     rect_id=0
     # previous , corrent frameでmax_iouを計算
-    # 軸はprebious
+    # 軸はprevious
     for rectangle in rects:
         # 最初のみ
         if max_iou is None:
             max_iou=rect.iou(rectangle)
+            # rect_id = 0
             max_id=rect_id
             
         if rect.iou(rectangle)>max_iou:
@@ -272,10 +273,14 @@ def pop_max_iou(rects, rect):
             max_id=rect_id
         rect_id=rect_id+1
         # 以下のif必要？
+        # max_iou = 0だったら
+    if max_iou == 0:
+        return None
     if len(rects)>max_id:
         # max_iouなrectを代入
         new_rect=rects[max_id].duplicate()
         # 現在フレームのrectからmax_iouなdect除く
+        # iouが0の時は余ってるrectsの中でindexが最も小さいもの
         rects.pop(max_id)
         return new_rect 
     else: return None 
