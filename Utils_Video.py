@@ -317,13 +317,13 @@ def recurrent_track_objects(video_info, args):
                 count = 0
                     
                 for rect in previous_frame.rects:
+
                     # Add
                     print("TOP::rect.trackID:{0},tmp_trackID:{1}".format(rect.trackID,tmp_trackID))
                     if len(frame_info.rects) == 0 : 
                         break
                     #if rect.trackID >= tmp_trackID and now_frame_len > len(current_frame.rects) :
-                    if frame_info.frame == 5:
-                        import pdb; pdb.set_trace()
+
                     if rect.trackID >= tmp_trackID :
                     #for rect in previous_frame.rects:
                         print "Before"+str(len(current_frame.rects))
@@ -362,7 +362,13 @@ def recurrent_track_objects(video_info, args):
                     # max_iou rect
                     # popするやつ考えないとだめ
                     current_rect = multiclass_rectangle.pop_max_iou(frame_info.rects,pred_rect)
+                    if frame_info.frame == 6 :
+                        import pdb; pdb.set_trace()
+                        
                     #poped_rects.append(current_rect)
+
+                    #if frame_info.frame == 5:
+                    #    import pdb; pdb.set_trace()
 
                     if current_rect is not None:
                         # 以前のフレームのrectを代入
@@ -392,7 +398,7 @@ def recurrent_track_objects(video_info, args):
                         #     current_rect.load_trackID(-1)
 
                         deltas_frame.append((dx1,dx2,dy1,dy2))
-                    else: break
+                    else: continue
                     rect_idx += 1
                 
             
